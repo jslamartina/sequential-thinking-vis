@@ -69,18 +69,9 @@ suite('E2E Connection Tests', function () {
       assert.ok(client.isConnected(), 'isConnected() should return true');
     });
 
-    test('Should handle connection timeout', async function () {
-      // This test verifies timeout handling by using an invalid server config
-      // We can't easily test this without mocking, so we'll skip for true E2E
-      // In a real E2E test, we'd try to connect to a non-existent server
-      this.skip();
-    });
-
-    test('Should handle connection failure', async function () {
-      // Similar to timeout - hard to test in true E2E without breaking things
-      // Would need to simulate network failure or invalid server
-      this.skip();
-    });
+    // Note: Connection timeout and failure scenarios are tested in unit tests
+    // (test/suite/unit/MCPClient.test.ts) as they require mocking and are
+    // difficult to test reliably in a true E2E environment.
   });
 
   suite('Disconnection', () => {
@@ -99,15 +90,9 @@ suite('E2E Connection Tests', function () {
       assert.ok(!client.isConnected(), 'isConnected() should return false');
     });
 
-    test('Should handle server crash', async function () {
-      // Hard to test in true E2E - would need to kill server process
-      this.skip();
-    });
-
-    test('Should handle unexpected disconnect', async function () {
-      // Hard to test in true E2E - would need to simulate network failure
-      this.skip();
-    });
+    // Note: Server crash and unexpected disconnect scenarios are tested in
+    // unit tests (test/suite/unit/MCPClient.test.ts) as they require
+    // process manipulation and are difficult to test in E2E.
   });
 
   suite('Connection State Management', () => {
