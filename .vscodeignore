@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+node_modules/**
+.gitignore
+.yarnrc
+.editorconfig
+*.md
+!README.md
+!CHANGELOG.md
+tsconfig.json
+.eslintrc.json
+PLAN.md
+THOUGHT_TREE.md
+
