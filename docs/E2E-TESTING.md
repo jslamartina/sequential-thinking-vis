@@ -9,6 +9,7 @@ This extension includes comprehensive end-to-end (E2E) tests that validate the c
 ### True E2E Testing
 
 Our E2E tests:
+
 - ✅ Run extension in **real VS Code instance** via `@vscode/test-electron`
 - ✅ Connect to **real MCP server** via `npx @modelcontextprotocol/server-sequential-thinking`
 - ✅ Test through **actual VS Code APIs** and commands
@@ -79,6 +80,7 @@ await waitFor(() => client.isConnected(), 10000);
 Tests real MCP server connection lifecycle.
 
 **What it tests:**
+
 - ✅ Connecting to real MCP server via npx
 - ✅ Connection state transitions (disconnected → connecting → connected)
 - ✅ Preventing duplicate connections
@@ -87,16 +89,17 @@ Tests real MCP server connection lifecycle.
 - ⏭️ Timeout/failure scenarios (skipped - hard to test without breaking server)
 
 **Example test:**
+
 ```typescript
 test('Should connect to MCP server successfully', async () => {
   const client = await getMCPClient();
-  
+
   // Execute connect command
   await executeCommand('sequential-thinking-vis.connectServer');
-  
+
   // Wait for connection
   await waitFor(() => client.isConnected(), 10000);
-  
+
   // Verify state
   assert.strictEqual(client.getConnectionState(), ConnectionState.Connected);
   assert.ok(client.isConnected());
@@ -110,6 +113,7 @@ test('Should connect to MCP server successfully', async () => {
 Tests thought processing with real MCP server.
 
 **What it tests:**
+
 - ✅ Linear thought sequences (1 → 2 → 3)
 - ✅ Progress tracking as thoughts arrive
 - ✅ Final thought completion detection
@@ -122,15 +126,16 @@ Tests thought processing with real MCP server.
 - ✅ Error resilience and recovery
 
 **Example test:**
+
 ```typescript
 test('Should receive and process linear thoughts', async () => {
   const client = await getMCPClient();
-  
+
   await executeCommand('sequential-thinking-vis.connectServer');
   await waitFor(() => client.isConnected(), 10000);
-  
+
   client.startSession('Linear flow test');
-  
+
   // Add sequential thoughts through real MCP server
   await client.callSequentialThinking({
     thought: 'First thought',
@@ -138,14 +143,14 @@ test('Should receive and process linear thoughts', async () => {
     totalThoughts: 3,
     nextThoughtNeeded: true,
   });
-  
+
   await client.callSequentialThinking({
     thought: 'Second thought',
     thoughtNumber: 2,
     totalThoughts: 3,
     nextThoughtNeeded: true,
   });
-  
+
   // Verify thoughts were processed
   const session = client.getCurrentSession();
   assert.strictEqual(session!.thoughts.length, 2);
@@ -159,6 +164,7 @@ test('Should receive and process linear thoughts', async () => {
 Tests UI rendering with real data from MCP server.
 
 **What it tests:**
+
 - ✅ Empty state when no session
 - ✅ Session header with accurate thought count
 - ✅ All thoughts rendered under session header
@@ -170,14 +176,15 @@ Tests UI rendering with real data from MCP server.
 - ✅ Tree refresh on data updates
 
 **Example test:**
+
 ```typescript
 test('Should render session header with thought count', async () => {
   const client = await getMCPClient();
   const provider = await getTreeProvider();
-  
+
   await executeCommand('sequential-thinking-vis.connectServer');
   await waitFor(() => client.isConnected(), 10000);
-  
+
   client.startSession('Test visualization');
   await client.callSequentialThinking({
     thought: 'Test thought',
@@ -185,13 +192,13 @@ test('Should render session header with thought count', async () => {
     totalThoughts: 3,
     nextThoughtNeeded: true,
   });
-  
+
   await wait(500);
-  
+
   // Get tree children
   const rootChildren = await provider.getChildren();
   assert.strictEqual(rootChildren.length, 1, 'Should have session header');
-  
+
   const sessionHeader = rootChildren[0];
   assert.ok(sessionHeader.label.includes('Session:'));
   assert.ok(sessionHeader.description?.includes('thoughts'));
@@ -205,6 +212,7 @@ test('Should render session header with thought count', async () => {
 Tests command execution and user workflows.
 
 **What it tests:**
+
 - ✅ Connect command execution from palette
 - ✅ Disconnect command execution
 - ✅ Preventing duplicate connections
@@ -216,17 +224,18 @@ Tests command execution and user workflows.
 - ✅ Output channel logging
 
 **Example test:**
+
 ```typescript
 test('Should complete full connect-think-disconnect workflow', async () => {
   const client = await getMCPClient();
-  
+
   // 1. Connect
   await executeCommand('sequential-thinking-vis.connectServer');
   await waitFor(() => client.isConnected(), 10000);
-  
+
   // 2. Start session
   client.startSession('Full workflow test');
-  
+
   // 3. Add thoughts
   await client.callSequentialThinking({
     thought: 'First step',
@@ -234,23 +243,23 @@ test('Should complete full connect-think-disconnect workflow', async () => {
     totalThoughts: 2,
     nextThoughtNeeded: true,
   });
-  
+
   await client.callSequentialThinking({
     thought: 'Second step',
     thoughtNumber: 2,
     totalThoughts: 2,
     nextThoughtNeeded: false,
   });
-  
+
   // 4. Verify session
   const session = client.getCurrentSession();
   assert.strictEqual(session!.thoughts.length, 2);
-  
+
   // 5. End and disconnect
   client.endSession();
   await executeCommand('sequential-thinking-vis.disconnectServer');
   await wait(500);
-  
+
   assert.ok(!client.isConnected());
 });
 ```
@@ -262,6 +271,7 @@ test('Should complete full connect-think-disconnect workflow', async () => {
 Tests cross-editor compatibility (VS Code & Cursor).
 
 **What it tests:**
+
 - ✅ Editor detection (identifies VS Code vs Cursor)
 - ✅ Extension activation in current editor
 - ✅ Command registration in current editor
@@ -276,6 +286,7 @@ Tests cross-editor compatibility (VS Code & Cursor).
 - ✅ Performance benchmarks (rapid thought updates)
 
 **Example test:**
+
 ```typescript
 test('Should correctly identify the editor', () => {
   const editorInfo = {
@@ -283,7 +294,7 @@ test('Should correctly identify the editor', () => {
     version: vscode.version,
     isCursor: vscode.env.appName.toLowerCase().includes('cursor'),
   };
-  
+
   console.log(`Running in ${editorInfo.name} v${editorInfo.version}`);
   assert.ok(editorInfo.name, 'Should have editor name');
   assert.ok(editorInfo.version, 'Should have version');
@@ -295,6 +306,7 @@ test('Should correctly identify the editor', () => {
 ### Summary Test Results
 
 **Total: 81 tests**
+
 - ✅ **81 passing** (100%)
 - ⏭️ **4 pending** (intentionally skipped)
 - ❌ **0 failing**
@@ -308,6 +320,7 @@ npm test
 ```
 
 This will:
+
 1. Compile TypeScript (`npm run compile`)
 2. Run linters (`npm run lint`)
 3. Launch VS Code test instance
@@ -315,6 +328,7 @@ This will:
 5. Report results
 
 **Expected output:**
+
 ```
 ✔ Validated version: 1.105.1
 Loading development extension at /path/to/extension
@@ -352,6 +366,7 @@ npm test -- --grep "Should connect to MCP server successfully"
 5. Tests will run with debugger attached
 
 **Note:** The extension runs in a separate VS Code instance, so:
+
 - Source breakpoints work in extension code
 - Test breakpoints work in test code
 - Use `debugger;` statement if breakpoints don't hit
@@ -389,10 +404,10 @@ import {
 suite('E2E My Feature Tests', function () {
   // Increase timeout for real MCP server operations
   this.timeout(15000);
-  
+
   setup(async () => {
     await ensureExtensionActivated();
-    
+
     // Start each test disconnected
     const client = await getMCPClient();
     if (client.isConnected()) {
@@ -400,7 +415,7 @@ suite('E2E My Feature Tests', function () {
       await wait(500);
     }
   });
-  
+
   teardown(async () => {
     // Clean up after each test
     try {
@@ -413,17 +428,17 @@ suite('E2E My Feature Tests', function () {
       // Ignore cleanup errors
     }
   });
-  
+
   test('Should test my feature', async () => {
     const client = await getMCPClient();
-    
+
     // Connect to real server
     await executeCommand('sequential-thinking-vis.connectServer');
     await waitFor(() => client.isConnected(), 10000);
-    
+
     // Test your feature
     // ...
-    
+
     // Assert results
     assert.ok(/* your assertion */);
   });
@@ -433,6 +448,7 @@ suite('E2E My Feature Tests', function () {
 ### 3. Best Practices
 
 **DO:**
+
 - ✅ Use `async/await` for all async operations
 - ✅ Set appropriate timeouts (`this.timeout(15000)`)
 - ✅ Wait for conditions with `waitFor()`
@@ -441,6 +457,7 @@ suite('E2E My Feature Tests', function () {
 - ✅ Use descriptive test names
 
 **DON'T:**
+
 - ❌ Mock the MCP server (defeats E2E purpose)
 - ❌ Create new client instances (use extension's)
 - ❌ Forget to disconnect in teardown
@@ -456,7 +473,7 @@ import { getMCPClient, executeCommand, waitFor } from '../../helpers/e2e-setup';
 
 suite('E2E My Feature Tests', function () {
   this.timeout(15000);
-  
+
   setup(async () => {
     await ensureExtensionActivated();
     const client = await getMCPClient();
@@ -465,23 +482,23 @@ suite('E2E My Feature Tests', function () {
       await wait(500);
     }
   });
-  
+
   teardown(async () => {
     const client = await getMCPClient();
     if (client.isConnected()) {
       await executeCommand('sequential-thinking-vis.disconnectServer');
     }
   });
-  
+
   test('Should handle my feature correctly', async () => {
     const client = await getMCPClient();
-    
+
     // Setup
     await executeCommand('sequential-thinking-vis.connectServer');
     await waitFor(() => client.isConnected(), 10000);
-    
+
     client.startSession('My feature test');
-    
+
     // Act
     await client.callSequentialThinking({
       thought: 'Testing my feature',
@@ -489,9 +506,9 @@ suite('E2E My Feature Tests', function () {
       totalThoughts: 1,
       nextThoughtNeeded: false,
     });
-    
+
     await wait(500);
-    
+
     // Assert
     const session = client.getCurrentSession();
     assert.ok(session, 'Should have session');
@@ -507,11 +524,13 @@ suite('E2E My Feature Tests', function () {
 **Problem:** Tests hang or timeout after 15 seconds
 
 **Causes:**
+
 - MCP server not starting (missing Node.js or network issues)
 - Connection never completing
 - Waiting for condition that never becomes true
 
 **Solutions:**
+
 ```bash
 # 1. Test MCP server manually
 npx -y @modelcontextprotocol/server-sequential-thinking
@@ -535,6 +554,7 @@ console.log('Connection state:', client.getConnectionState());
 **Problem:** Tests fail with "Not connected" errors
 
 **Solutions:**
+
 - Ensure test calls `waitFor(() => client.isConnected())` after connect
 - Check that `executeCommand('connectServer')` completes without error
 - Verify MCP server can start: `npx -y @modelcontextprotocol/server-sequential-thinking`
@@ -545,6 +565,7 @@ console.log('Connection state:', client.getConnectionState());
 **Problem:** Tree view returns empty or incorrect data
 
 **Solutions:**
+
 - Call `await wait(500)` after adding thoughts (let events propagate)
 - Verify session was created: `assert.ok(client.getCurrentSession())`
 - Check thoughts were actually added: `console.log(session.thoughts)`
@@ -555,12 +576,14 @@ console.log('Connection state:', client.getConnectionState());
 **Problem:** Tests work on your machine but fail in GitHub Actions/CI
 
 **Causes:**
+
 - Different Node.js version
 - Network restrictions blocking npx
 - Timing differences (CI is slower)
 - Missing dependencies
 
 **Solutions:**
+
 ```yaml
 # .github/workflows/test.yml
 - name: Setup Node.js
@@ -580,23 +603,27 @@ console.log('Connection state:', client.getConnectionState());
 **Use these techniques:**
 
 1. **Add console.log statements**
+
 ```typescript
 console.log('State:', client.getConnectionState());
 console.log('Session:', client.getCurrentSession());
 ```
 
 2. **Check Output panel**
+
 ```typescript
 const outputChannel = client.getOutputChannel();
 // Output shows MCP server logs
 ```
 
 3. **Use VS Code debugger**
+
 - Set breakpoints in test file
 - Press F5, select "Extension Tests"
 - Step through code
 
 4. **Isolate the test**
+
 ```bash
 npm test -- --grep "exact test name"
 ```
@@ -617,21 +644,21 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node-version: ['18', '20']
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run linters
         run: npm run lint
-      
+
       - name: Run E2E tests
         run: npm test
 ```
@@ -639,6 +666,7 @@ jobs:
 ### Test Metrics
 
 Monitor these metrics:
+
 - **Pass rate:** Should be 100% (81/81)
 - **Duration:** ~60 seconds for full suite
 - **Flakiness:** Zero flaky tests (consistent results)
