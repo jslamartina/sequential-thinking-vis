@@ -1,0 +1,250 @@
+---
+description: Best practices and patterns for VS Code extension development
+---
+
+# VS Code Extension Development Patterns
+
+## Extension Activation
+
+### Activation Events
+
+Define activation events in [package.json](mdc:package.json):
+
+```json
+"activationEvents": [
+  "onCommand:sequential-thinking-vis.helloWorld",
+  "onView:sequentialThinkingView"
+]
+```
+
+**Best Practices:**
+
+- Use lazy activation - activate only when needed
+- Prefer `onCommand` over `*` wildcard
+- Activate on view when using TreeView providers
+
+## Command Registration
+
+Register commands in [src/extension.ts](mdc:src/extension.ts):
+
+```typescript
+const command = vscode.commands.registerCommand('sequential-thinking-vis.commandName', async () => {
+  // Command implementation
+});
+context.subscriptions.push(command);
+```
+
+**Patterns:**
+
+- Prefix all commands with extension identifier
+- Use async functions for commands with I/O
+- Always push to `context.subscriptions`
+- Show progress for long-running operations
+
+## Tree View Providers
+
+Implement `vscode.TreeDataProvider` for sidebar trees:
+
+```typescript
+class ThoughtTreeProvider implements vscode.TreeDataProvider<ThoughtNode> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<ThoughtNode | undefined>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire(undefined);
+  }
+
+  getTreeItem(element: ThoughtNode): vscode.TreeItem {
+    // Return tree item representation
+  }
+
+  getChildren(element?: ThoughtNode): Thenable<ThoughtNode[]> {
+    // Return child nodes
+  }
+}
+```
+
+**Best Practices:**
+
+- Use EventEmitter for change notifications
+- Implement lazy loading for large trees
+- Add context menus with `TreeItem.contextValue`
+- Use appropriate collapse states
+
+## Webview Providers
+
+Use webviews for rich interactive UI:
+
+```typescript
+class ThoughtWebviewProvider implements vscode.WebviewViewProvider {
+  resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
+  ) {
+    webviewView.webview.options = {
+      enableScripts: true,
+    };
+    webviewView.webview.html = this.getHtmlContent();
+  }
+}
+```
+
+**Security:**
+
+- Always sanitize HTML content
+- Use Content Security Policy
+- Enable scripts only when necessary
+- Use `vscode.Uri.joinPath()` for resource URIs
+
+## Configuration
+
+Access user settings via Configuration API:
+
+```typescript
+const config = vscode.workspace.getConfiguration('sequential-thinking-vis');
+const autoConnect = config.get<boolean>('autoConnect', true);
+
+// Listen for changes
+vscode.workspace.onDidChangeConfiguration((e) => {
+  if (e.affectsConfiguration('sequential-thinking-vis')) {
+    // Reload configuration
+  }
+});
+```
+
+**Define settings in package.json:**
+
+```json
+"contributes": {
+  "configuration": {
+    "title": "MCP Sequential Thinking",
+    "properties": {
+      "sequential-thinking-vis.autoConnect": {
+        "type": "boolean",
+        "default": true,
+        "description": "Auto-connect to MCP server on startup"
+      }
+    }
+  }
+}
+```
+
+## Output Channels
+
+Create output channel for logging:
+
+```typescript
+const outputChannel = vscode.window.createOutputChannel('MCP Sequential Thinking');
+context.subscriptions.push(outputChannel);
+
+outputChannel.appendLine('Extension activated');
+outputChannel.show(); // Show in Output panel
+```
+
+## Status Bar Items
+
+Add status indicators:
+
+```typescript
+const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+statusBarItem.text = '$(debug-disconnect) MCP Disconnected';
+statusBarItem.command = 'sequential-thinking-vis.connect';
+statusBarItem.show();
+context.subscriptions.push(statusBarItem);
+```
+
+**Icons:** Use VS Code's built-in codicons with `$(icon-name)` syntax.
+
+## Progress Notifications
+
+Show progress for long operations:
+
+```typescript
+await vscode.window.withProgress(
+  {
+    location: vscode.ProgressLocation.Notification,
+    title: 'Connecting to MCP server',
+    cancellable: true,
+  },
+  async (progress, token) => {
+    token.onCancellationRequested(() => {
+      // Handle cancellation
+    });
+
+    progress.report({ increment: 0, message: 'Initializing...' });
+    // Do work
+    progress.report({ increment: 50, message: 'Connecting...' });
+    // More work
+    progress.report({ increment: 100 });
+  }
+);
+```
+
+## Error Handling UI
+
+Use appropriate notification methods:
+
+```typescript
+// Information
+vscode.window.showInformationMessage('Thought tree updated');
+
+// Warning
+vscode.window.showWarningMessage('MCP server connection unstable');
+
+// Error
+vscode.window
+  .showErrorMessage('Failed to connect to MCP server', 'Retry', 'Settings')
+  .then((selection) => {
+    if (selection === 'Retry') {
+      // Retry logic
+    }
+  });
+```
+
+## Resource Cleanup
+
+Always clean up resources:
+
+```typescript
+export function deactivate() {
+  // Close connections
+  mcpClient?.disconnect();
+
+  // Note: Subscriptions are automatically disposed
+  // Only manually dispose resources not in context.subscriptions
+}
+```
+
+## Testing Extensions
+
+Use `@vscode/test-electron` for integration tests:
+
+```typescript
+import * as assert from 'assert';
+import * as vscode from 'vscode';
+
+suite('Extension Test Suite', () => {
+  test('Command registration', async () => {
+    const commands = await vscode.commands.getCommands();
+    assert.ok(commands.includes('sequential-thinking-vis.helloWorld'));
+  });
+});
+```
+
+## Performance Tips
+
+- Defer expensive operations until needed
+- Use virtual rendering for large lists
+- Debounce rapid updates
+- Cache computed values
+- Profile with VS Code Extension Host Performance tools
+
+## Cursor Compatibility
+
+This extension works in Cursor because:
+
+- Cursor uses VS Code's extension API
+- All VS Code extension patterns work identically
+- No special Cursor-specific code needed
+- Test in both VS Code and Cursor before release

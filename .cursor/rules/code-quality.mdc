@@ -1,0 +1,274 @@
+---
+alwaysApply: true
+---
+
+# Code Quality Standards
+
+## Linting and Formatting
+
+### ESLint
+
+Run linter before commits:
+
+```bash
+npm run lint
+```
+
+Fix auto-fixable issues:
+
+```bash
+npm run lint:code -- --fix
+```
+
+**Rules:**
+
+- Follow `@typescript-eslint/recommended` ruleset
+- Enable Prettier integration via `eslint-config-prettier`
+- No warnings allowed in production code
+- Fix lint errors before committing
+
+### Prettier
+
+Format all TypeScript files:
+
+```bash
+npm run format
+```
+
+Check formatting without changes:
+
+```bash
+npm run format:check
+```
+
+**Configuration:**
+
+- 2-space indentation
+- Single quotes for strings
+- Trailing commas in multiline structures
+- 100 character line length
+- Semicolons required
+
+## Pre-commit Checklist
+
+Before committing code, ensure:
+
+- [ ] `npm run compile` succeeds
+- [ ] `npm run lint` passes with no errors
+- [ ] `npm run format:check` passes
+- [ ] `npm test` all tests pass
+- [ ] No `console.log()` debugging statements
+- [ ] No commented-out code blocks
+- [ ] TODO comments for incomplete work
+- [ ] Updated documentation if API changed
+
+## Code Review Standards
+
+When reviewing code, check for:
+
+### Architecture
+
+- Follows project structure patterns
+- Proper separation of concerns
+- Appropriate abstraction levels
+- No circular dependencies
+
+### TypeScript Quality
+
+- Proper type annotations
+- No `any` types without justification
+- Interfaces for all public APIs
+- Proper null/undefined handling
+
+### Error Handling
+
+- Try/catch for async operations
+- User-friendly error messages
+- Errors logged to output channel
+- No swallowed exceptions
+
+### Performance
+
+- No unnecessary re-renders
+- Efficient data structures
+- Debounced rapid updates
+- Lazy loading where appropriate
+
+### Security
+
+- Input validation
+- Proper HTML escaping in webviews
+- No hardcoded credentials
+- Safe file operations
+
+### Testability
+
+- Functions are unit-testable
+- Dependencies can be mocked
+- No global state when avoidable
+- Tests included for new features
+
+## Documentation Requirements
+
+### Code Comments
+
+- JSDoc for all exported functions/classes
+- Inline comments for complex logic
+- Explain _why_, not _what_
+- Link to relevant issues/PRs
+
+### README Updates
+
+Update [README.md](mdc:README.md) when:
+
+- Adding new commands
+- Changing extension behavior
+- Adding configuration options
+- Updating requirements
+
+### CHANGELOG
+
+Update [CHANGELOG.md](mdc:CHANGELOG.md) for:
+
+- New features
+- Bug fixes
+- Breaking changes
+- Deprecations
+
+Follow [Keep a Changelog](https://keepachangelog.com/) format.
+
+## Git Commit Standards
+
+### Commit Message Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:**
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting)
+- `refactor`: Code refactoring
+- `test`: Adding/updating tests
+- `chore`: Build process or tooling changes
+
+**Examples:**
+
+```
+feat(views): add thought tree visualization
+
+Implement TreeDataProvider for displaying sequential thinking
+process in VS Code sidebar. Includes collapsible nodes and
+real-time updates.
+
+Closes #12
+```
+
+```
+fix(mcp): handle connection timeout gracefully
+
+Add retry logic and user notification when MCP server
+connection times out. Prevents extension crash.
+```
+
+### Branch Naming
+
+- `feat/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation updates
+- `refactor/` - Code refactoring
+- `test/` - Test improvements
+
+Example: `feat/thought-tree-provider`
+
+## Performance Budgets
+
+Maintain performance standards:
+
+- Extension activation: < 200ms
+- Command execution: < 100ms
+- Tree view refresh: < 50ms
+- Memory usage: < 50MB
+- Bundle size: < 1MB
+
+Profile regularly and optimize hot paths.
+
+## Accessibility
+
+Ensure extension is accessible:
+
+- Proper ARIA labels in webviews
+- Keyboard navigation support
+- Screen reader compatible
+- High contrast theme support
+- Meaningful icon descriptions
+
+## Extension Size
+
+Keep extension lightweight:
+
+- Bundle only necessary dependencies
+- Tree-shake unused code
+- Lazy load heavy features
+- Compress assets
+- Use VS Code's built-in libraries
+
+Check bundle size:
+
+```bash
+npm run package
+ls -lh *.vsix
+```
+
+## Deprecation Policy
+
+When deprecating features:
+
+1. Add `@deprecated` JSDoc tag
+2. Log deprecation warning
+3. Update documentation
+4. Provide migration path
+5. Remove after 2 major versions
+
+## Security Best Practices
+
+- Never commit secrets or tokens
+- Validate all external input
+- Use CSP in webviews
+- Sanitize HTML content
+- Review dependencies for vulnerabilities
+- Use workspace trust API appropriately
+
+Run security audit:
+
+```bash
+npm audit
+```
+
+## Continuous Improvement
+
+Regularly review and update:
+
+- Dependencies (monthly)
+- VS Code API usage (check for deprecations)
+- TypeScript version (yearly)
+- Test coverage (maintain >80%)
+- Documentation accuracy
+
+## Quality Metrics
+
+Track these metrics:
+
+- Test coverage: >80%
+- Build time: <30s
+- Bundle size: <1MB
+- GitHub issues response: <48h
+- Bug fix time: <1 week
+- Code review turnaround: <2 days

@@ -1,0 +1,282 @@
+---
+globs: test/**/*.ts
+---
+
+# Testing Standards
+
+## Test Framework
+
+This extension uses Mocha for testing with `@vscode/test-electron` for integration tests.
+
+## Test Structure
+
+### Location
+
+- All tests in `/test/suite/` directory
+- Test files must end with `.test.ts`
+- Mirror source structure when possible
+
+### Naming Conventions
+
+```typescript
+suite('Extension Test Suite', () => {
+  suite('Commands', () => {
+    test('should register hello world command', async () => {
+      // Test implementation
+    });
+
+    test('should show message when command executed', async () => {
+      // Test implementation
+    });
+  });
+});
+```
+
+**Patterns:**
+
+- Use descriptive suite names
+- Test names should complete the phrase "it should..."
+- Group related tests in nested suites
+- One assertion per test when possible
+
+## Test Types
+
+### Unit Tests
+
+Test individual functions and classes in isolation:
+
+```typescript
+import * as assert from 'assert';
+import { parseThoughtData } from '../../src/utils/parser';
+
+suite('Parser Utils', () => {
+  test('should parse valid thought data', () => {
+    const input = { thought: 'test', thoughtNumber: 1 };
+    const result = parseThoughtData(input);
+    assert.strictEqual(result.thought, 'test');
+  });
+});
+```
+
+### Integration Tests
+
+Test VS Code API integration:
+
+```typescript
+import * as vscode from 'vscode';
+
+suite('Extension Integration', () => {
+  test('should activate extension', async () => {
+    const ext = vscode.extensions.getExtension('josephlamartina.sequential-thinking-vis');
+    await ext?.activate();
+    assert.ok(ext?.isActive);
+  });
+});
+```
+
+### MCP Integration Tests
+
+Test MCP client behavior (use mocks):
+
+```typescript
+import { MockMCPServer } from '../mocks/mcp-server';
+
+suite('MCP Client', () => {
+  let mockServer: MockMCPServer;
+
+  setup(() => {
+    mockServer = new MockMCPServer();
+  });
+
+  teardown(() => {
+    mockServer.dispose();
+  });
+
+  test('should connect to MCP server', async () => {
+    await client.connect(mockServer.endpoint);
+    assert.strictEqual(client.isConnected, true);
+  });
+});
+```
+
+## Mocking
+
+### VS Code API Mocking
+
+Use test doubles for VS Code APIs:
+
+```typescript
+const mockOutputChannel = {
+  appendLine: (text: string) => {
+    /* stub */
+  },
+  show: () => {
+    /* stub */
+  },
+};
+```
+
+### MCP Server Mocking
+
+Create mock MCP server for testing:
+
+```typescript
+class MockMCPServer {
+  private handlers = new Map();
+
+  emitToolCall(tool: string, params: any) {
+    const handler = this.handlers.get(tool);
+    if (handler) handler(params);
+  }
+
+  onToolCall(tool: string, handler: Function) {
+    this.handlers.set(tool, handler);
+  }
+}
+```
+
+## Assertions
+
+Use Node's `assert` module:
+
+```typescript
+import * as assert from 'assert';
+
+// Equality
+assert.strictEqual(actual, expected);
+assert.deepStrictEqual(actualObj, expectedObj);
+
+// Truthiness
+assert.ok(value);
+
+// Exceptions
+assert.throws(() => {
+  throw new Error();
+});
+assert.rejects(async () => {
+  throw new Error();
+});
+```
+
+## Async Testing
+
+Always return promises or use async/await:
+
+```typescript
+// Good
+test('should load data', async () => {
+  const data = await loadData();
+  assert.ok(data);
+});
+
+// Bad - test completes before assertion
+test('should load data', () => {
+  loadData().then((data) => {
+    assert.ok(data); // Never runs if test finishes first
+  });
+});
+```
+
+## Test Lifecycle Hooks
+
+```typescript
+suite('Test Suite', () => {
+  let resource: Resource;
+
+  // Runs once before all tests
+  suiteSetup(async () => {
+    // Expensive setup
+  });
+
+  // Runs before each test
+  setup(() => {
+    resource = new Resource();
+  });
+
+  // Runs after each test
+  teardown(() => {
+    resource.dispose();
+  });
+
+  // Runs once after all tests
+  suiteTeardown(() => {
+    // Final cleanup
+  });
+});
+```
+
+## Test Coverage
+
+Run tests with coverage:
+
+```bash
+npm test -- --coverage
+```
+
+**Goals:**
+
+- Aim for >80% code coverage
+- Test happy paths and error cases
+- Test edge cases and boundary conditions
+- Test async error handling
+
+## Test Organization
+
+```
+test/
+├── suite/
+│   ├── extension.test.ts       # Extension lifecycle tests
+│   ├── commands/
+│   │   └── *.test.ts           # Command tests
+│   ├── views/
+│   │   └── *.test.ts           # View provider tests
+│   └── utils/
+│       └── *.test.ts           # Utility function tests
+├── mocks/
+│   ├── mcp-server.ts           # Mock MCP server
+│   └── vscode-stubs.ts         # VS Code API stubs
+└── fixtures/
+    └── thought-data.json       # Test data files
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test -- --grep "Extension"
+
+# Watch mode during development
+npm run watch & npm test -- --watch
+```
+
+## Debugging Tests
+
+1. Open test file in VS Code/Cursor
+2. Set breakpoints
+3. Press F5 to launch debugger
+4. Select "Extension Tests" configuration
+5. Step through test code
+
+## Best Practices
+
+- Write tests first (TDD) when possible
+- Keep tests independent - no shared state
+- Use descriptive assertion messages
+- Test error handling explicitly
+- Mock external dependencies
+- Clean up resources in teardown
+- Run tests before committing
+- Keep tests fast (<5s for full suite)
+
+## Continuous Integration
+
+Tests run automatically on:
+
+- Pre-commit hook (if configured)
+- Pull request creation
+- Before publishing extension
+
+Ensure all tests pass before merging code.

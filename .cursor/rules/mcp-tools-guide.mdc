@@ -1,156 +1,280 @@
 ---
 alwaysApply: true
 ---
----
-alwaysApply: true
----
 
 # MCP Tools Guide
 
-The devcontainer provides Model Context Protocol (MCP) servers for specialized development tasks.
+Model Context Protocol (MCP) tools are available to the coding agent during development to enhance capabilities beyond standard tools.
 
 ## Available Tools & When to Use
 
-### 🧠 **Sequential Thinking** (`mcp_sequential-thinking_*`)
+### 🧠 **Sequential Thinking** (`mcp_sequential-thinking_sequentialthinking`)
 
 **When to use:**
-- ✅ Logging step-by-step reasoning with explicit next actions
-- ✅ Tracking progress across multi-step tasks (threaded)
-- ✅ Producing concise status updates and future plan
 
-**Example:**
-```bash
-mcp_sequential-thinking_think(
-  thread_purpose: "Cloud relay test planning",
-  thought: "Validate baseline LAN-only behavior before enabling relay",
-  thought_index: 1,
-  tool_recommendation: "functions.run_terminal_cmd",
-  left_to_be_done: "Run ./scripts/test-cloud-relay.sh Phase 1; check logs"
-)
-```
+- ✅ Breaking down complex multi-step implementation tasks
+- ✅ Planning architecture or refactoring strategies
+- ✅ Analyzing difficult debugging scenarios
+- ✅ Exploring design trade-offs with branches
+- ✅ Revising previous thinking when new insights emerge
+- ✅ Maintaining context across long problem-solving sessions
+
+**Don't use for:**
+
+- ❌ Simple, straightforward tasks
+- ❌ Single-step operations
+- ❌ Tasks with obvious solutions
+
+**Capabilities:**
+
+1. **Linear Thinking** - Sequential steps toward a solution
+
+   ```typescript
+   { thought: "Step 1...", thoughtNumber: 1, totalThoughts: 5, nextThoughtNeeded: true }
+   ```
+
+2. **Revisions** - Correct earlier thinking
+
+   ```typescript
+   { thought: "Actually...", isRevision: true, revisesThought: 3 }
+   ```
+
+3. **Branching** - Explore multiple approaches
+
+   ```typescript
+   // Branch A
+   { thought: "Approach A...", branchFromThought: 2, branchId: "option-a" }
+   // Branch B
+   { thought: "Approach B...", branchFromThought: 2, branchId: "option-b" }
+   ```
+
+4. **Dynamic Adjustment** - Expand scope as needed
+   ```typescript
+   { thought: "More complex...", totalThoughts: 10, needsMoreThoughts: true }
+   ```
+
+**Required Parameters:** `thought`, `thoughtNumber`, `totalThoughts`, `nextThoughtNeeded`
+
+**See:** [docs/sequential-thinking-guide.md](mdc:docs/sequential-thinking-guide.md) for complete examples
 
 ### 🐍 **Python Execution** (`mcp_python_*`)
 
 **When to use:**
-- ✅ Running quick Python scripts for analysis
-- ✅ Testing Python code snippets
-- ✅ Automating file operations (read/write/list)
-- ✅ Processing data or logs
+
+- ✅ Quick data analysis or log parsing
+- ✅ Generating test data or fixtures
+- ✅ Prototyping algorithms before TypeScript implementation
+- ✅ Processing JSON/CSV files
 
 **Example:**
-```bash
-# Analyze a Python file
-mcp_python_run_python_code("import ast; tree = ast.parse(open('file.py').read())")
-```
 
-### 🐳 **Docker Management** (`mcp_docker_*`)
-
-**When to use:**
-- ✅ Checking container status/logs
-- ✅ Building Docker images
-- ✅ Managing containers (start/stop/remove)
-- ✅ Debugging add-on containers
-
-**Example:**
-```bash
-# Check addon logs
-mcp_docker_fetch_container_logs("addon_local_cync-controller")
+```python
+# Parse package.json and analyze dependencies
+mcp_python_run_python_code("""
+import json
+with open('package.json') as f:
+    pkg = json.load(f)
+print(f"Dependencies: {len(pkg.get('dependencies', {}))}")
+""")
 ```
 
 ### 🔧 **Git Operations** (`mcp_git_*`)
 
 **When to use:**
-- ✅ Checking git status and diffs
-- ✅ Committing changes with messages
-- ✅ Viewing commit history
-- ✅ Branch management
+
+- ✅ Checking git status and uncommitted changes
+- ✅ Viewing commit history and diffs
+- ✅ Creating branches for features
+- ✅ Staging and committing changes
 
 **Example:**
+
 ```bash
-# Commit changes
-mcp_git_git_commit("repo_path: /workspaces/hass-addons, message: 'Fix token creation'")
+# Check current git status
+mcp_git_git_status(repo_path: "/Users/josephlamartina/Projects/sequential-thinking-vis")
+
+# View recent commits
+mcp_git_git_log(repo_path: ".", max_count: 10)
 ```
 
-### 🌐 **Web Fetching** (`mcp_web_fetch_*`)
+**Prefer this over:**
+
+- Running `git` commands via terminal for status checks
+
+### 🌐 **Web Search & Fetch** (`mcp_web_fetch_*`, `web_search`)
 
 **When to use:**
-- ✅ Fetching current documentation or specs
-- ✅ Looking up API documentation
-- ✅ Getting latest protocol information
-- ✅ Research current best practices
+
+- ✅ Looking up VS Code Extension API documentation
+- ✅ Researching MCP protocol specifications
+- ✅ Finding best practices for TreeView/Webview implementations
+- ✅ Checking latest npm package versions or APIs
+
+**Example:**
+
+```bash
+# Fetch VS Code API documentation
+mcp_web_fetch_fetch(url: "https://code.visualstudio.com/api/references/vscode-api")
+
+# Search for MCP SDK examples
+web_search("@modelcontextprotocol/sdk Client usage examples")
+```
 
 **Don't use for:**
-- ❌ Searching the codebase (use codebase_search)
-- ❌ Reading project files (use read_file)
+
+- ❌ Searching THIS codebase (use `codebase_search`)
+- ❌ Reading project files (use `read_file`)
 
 ### ⏰ **Time Operations** (`mcp_time_*`)
 
 **When to use:**
-- ✅ Converting between timezones
-- ✅ Getting current time for scripts
-- ✅ Calculating timestamps for documentation
+
+- ✅ Adding timestamps to logs or documentation
+- ✅ Generating dated filenames or version tags
+- ✅ Calculating time-based metrics
+
+**Example:**
+
+```bash
+# Get current time for changelog entry
+mcp_time_get_current_time(timezone: "America/Chicago")
+```
 
 ### 📁 **Filesystem Operations** (`mcp_filesystem_*`)
 
 **When to use:**
-- ✅ Reading/writing files across the workspace
-- ✅ Creating directories
-- ✅ Moving/renaming files
-- ✅ Listing directories with sizes
 
-**Preferred over:**
-- Plain shell commands when file operations are needed
+- ✅ Reading/writing files (alternative to `read_file`/`write`)
+- ✅ Listing directory contents with size info
+- ✅ Searching for files by pattern
+- ✅ Getting file metadata
+
+**Example:**
+
+```bash
+# List source directory with sizes
+mcp_filesystem_list_directory_with_sizes(path: "./src", sortBy: "size")
+
+# Search for all TypeScript test files
+mcp_filesystem_search_files(path: "./test", pattern: "*.test.ts")
+```
+
+**Prefer standard tools:**
+
+- Use `read_file`/`write` for file I/O (they're simpler)
+- Use `glob_file_search` for file pattern matching
+- Use `list_dir` for basic directory listings
 
 ## Tool Usage Priorities
 
-1. **Use specialized MCP tools first** - They're faster and provide better context
-2. **Use grep/search for exact matches** - More efficient than Python parsing
-3. **Use terminal commands** - Only when MCP tools can't do it
-4. **Use web search sparingly** - Prefer codebase search and local knowledge
+For this VS Code extension project:
 
-## Common Patterns
+1. **Standard tools first** - `read_file`, `write`, `search_replace`, `grep`, `run_terminal_cmd`
+2. **MCP git tools** - For git operations instead of terminal commands
+3. **Web search** - When you need current documentation or unfamiliar APIs
+4. **Sequential thinking** - For complex, multi-step problems requiring planning
+5. **Python tools** - Only when TypeScript/shell commands are insufficient
+6. **Filesystem MCP tools** - Use standard tools unless you need specific features
 
-### Checking Addon Status
-```bash
-# Use Docker tool
-mcp_docker_fetch_container_logs("addon_local_cync-controller", tail: 50)
+## Common Development Patterns
+
+### Reading Extension Files
+
+```typescript
+// Prefer standard tool
+read_file('src/extension.ts');
+
+// Not: mcp_filesystem_read_text_file
 ```
 
-### Reading Project Files
+### Checking Project Status
+
 ```bash
-# Use filesystem tool
-mcp_filesystem_read_text_file("path/to/file.py")
+# Use MCP git
+mcp_git_git_status(repo_path: ".")
+
+# Not: run_terminal_cmd("git status")
 ```
 
-### Analyzing Code
+### Searching Code
+
 ```bash
-# Use Python tool
-mcp_python_run_python_code("import ast; ...")
+# Use semantic search for understanding
+codebase_search(
+  query: "How is the TreeView provider implemented?",
+  target_directories: ["src/views"]
+)
+
+# Use grep for exact matches
+grep("TreeDataProvider", path: "src")
 ```
 
-### Finding Patterns
+### Installing Dependencies
+
 ```bash
-# Use grep tool
-grep("pattern", "path/to/search")
+# Use terminal for npm commands
+run_terminal_cmd("npm install @modelcontextprotocol/sdk")
+
+# Not: MCP tools (they don't handle npm)
 ```
 
-### Searching Codebase
+### Looking Up APIs
+
 ```bash
-# Use codebase_search for semantic understanding
-codebase_search(query: "How does token creation work?", target_directories: ["scripts"])
+# Use web search for current docs
+web_search("VS Code TreeDataProvider API examples")
+
+# Or fetch specific documentation
+mcp_web_fetch_fetch(url: "https://code.visualstudio.com/api/extension-guides/tree-view")
 ```
+
+## Project-Specific Guidelines
+
+### When Building MCP Integration
+
+- Use `web_search` to look up `@modelcontextprotocol/sdk` documentation
+- Use `codebase_search` to find similar patterns in other extensions
+- Use `sequential_thinking` to plan connection lifecycle management
+
+### When Building UI Components
+
+- Use `web_search` for VS Code webview/TreeView examples
+- Use `grep` to find existing VS Code API usage patterns
+- Use standard file tools for reading/writing component code
+
+### When Testing
+
+- Use `run_terminal_cmd` for `npm test`
+- Use `read_file` to examine test results
+- Use `grep` to find test patterns in codebase
+
+### When Debugging
+
+- Use `mcp_git_git_diff_unstaged` to see recent changes
+- Use `read_lints` to check TypeScript errors
+- Use `sequential_thinking` for complex debugging scenarios
 
 ## Troubleshooting
 
 If an MCP tool fails:
-1. Check tool parameters are correct
-2. Try alternative tool (e.g., shell command instead)
-3. Continue gracefully with available information
-4. Note the limitation for future runs
 
-**Important:** If MCP tools fail, standard tools (grep, terminal commands) are always available as fallback.
+1. **Check parameters** - Ensure correct format and required fields
+2. **Use fallback** - Standard tools (`read_file`, `run_terminal_cmd`, `grep`) always work
+3. **Continue gracefully** - Don't block on MCP tool failures
+4. **Note the issue** - Mention if a tool isn't working as expected
+
+## When NOT to Use MCP Tools
+
+Skip MCP tools for:
+
+- Simple file operations → Use `read_file`, `write`, `search_replace`
+- Running npm/node commands → Use `run_terminal_cmd`
+- Searching code → Use `codebase_search` or `grep`
+- Reading linter errors → Use `read_lints`
+- TypeScript compilation → Use `run_terminal_cmd`
 
 ## Related
 
-- [AGENTS.md](mdc:AGENTS.md) - Full MCP documentation reference
-- [docs/developer/mcp-tools.md](mdc:docs/developer/mcp-tools.md) - Detailed MCP guide
+- [mcp-sdk-integration.mdc](mdc:.cursor/rules/mcp-sdk-integration.mdc) - Using MCP SDK in extension code
+- [vscode-extension-patterns.mdc](mdc:.cursor/rules/vscode-extension-patterns.mdc) - VS Code API patterns
+- [Model Context Protocol](https://modelcontextprotocol.io/) - Official MCP documentation

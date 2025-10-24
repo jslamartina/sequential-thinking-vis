@@ -1,0 +1,357 @@
+---
+description: Guidelines for building thought visualization UI components
+---
+
+# UI and Visualization Guidelines
+
+## Visualization Principles
+
+### Core Goals
+
+1. **Clarity** - Make thought progression easy to understand
+2. **Real-time** - Update as thoughts are generated
+3. **Interactive** - Allow exploration of thought trees
+4. **Informative** - Show metrics and relationships
+
+### Design Philosophy
+
+- Minimize cognitive load
+- Use familiar VS Code UI patterns
+- Maintain consistency with IDE theme
+- Progressive disclosure of details
+
+## Tree View Design
+
+### Thought Hierarchy
+
+```
+📊 Sequential Thinking Session
+├── 🧠 Thought 1: Initial analysis
+│   └── 📝 "Analyzing the problem..."
+├── 🧠 Thought 2: Hypothesis formation
+│   └── 📝 "I believe the solution is..."
+├── 🔄 Thought 3: Revision of Thought 1
+│   └── 📝 "Actually, reconsidering..."
+└── 🌿 Branch A (from Thought 2)
+    ├── 🧠 Thought 4: Alternative approach
+    └── 🧠 Thought 5: Branch conclusion
+```
+
+### Icon Usage
+
+Use VS Code codicons consistently:
+
+- `$(lightbulb)` - Regular thought
+- `$(git-branch)` - Branched thought
+- `$(sync)` - Revision
+- `$(check)` - Final thought (nextThoughtNeeded: false)
+- `$(warning)` - Needs more thoughts
+- `$(symbol-number)` - Thought number indicator
+
+### Tree Item Properties
+
+```typescript
+class ThoughtTreeItem extends vscode.TreeItem {
+  constructor(thought: Thought) {
+    super(
+      `Thought ${thought.thoughtNumber}: ${truncate(thought.thought)}`,
+      thought.nextThoughtNeeded
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
+    );
+
+    this.tooltip = this.createTooltip(thought);
+    this.description = this.createDescription(thought);
+    this.iconPath = this.selectIcon(thought);
+    this.contextValue = 'thought';
+  }
+
+  private createTooltip(thought: Thought): string {
+    return `Thought ${thought.thoughtNumber}/${thought.totalThoughts}\n\n${thought.thought}`;
+  }
+
+  private createDescription(thought: Thought): string {
+    const tags = [];
+    if (thought.isRevision) tags.push('revision');
+    if (thought.branchId) tags.push(`branch:${thought.branchId}`);
+    return tags.join(', ');
+  }
+}
+```
+
+## Webview Visualization
+
+### Interactive Thought Graph
+
+Display thought progression as an interactive graph:
+
+```html
+<div id="thought-graph">
+  <svg width="100%" height="600">
+    <!-- Nodes and edges rendered here -->
+  </svg>
+</div>
+```
+
+**Features:**
+
+- Pan and zoom support
+- Click nodes to view details
+- Highlight revision chains
+- Show branch relationships
+- Display progress metrics
+
+### Thought Detail Panel
+
+Show detailed information for selected thought:
+
+```html
+<div class="thought-detail">
+  <h3>Thought #<span id="thought-number"></span></h3>
+  <div class="thought-content" id="content"></div>
+  <div class="thought-metadata">
+    <span class="badge">Progress: <span id="progress"></span></span>
+    <span class="badge" id="status"></span>
+  </div>
+  <div class="thought-relations">
+    <h4>Relationships</h4>
+    <ul id="relations"></ul>
+  </div>
+</div>
+```
+
+## Styling
+
+### Color Scheme
+
+Respect VS Code theme variables:
+
+```css
+:root {
+  --thought-primary: var(--vscode-editor-foreground);
+  --thought-secondary: var(--vscode-descriptionForeground);
+  --thought-accent: var(--vscode-textLink-foreground);
+  --thought-warning: var(--vscode-editorWarning-foreground);
+  --thought-success: var(--vscode-testing-iconPassed);
+  --thought-border: var(--vscode-panel-border);
+}
+```
+
+### Thought States
+
+Visual indicators for thought states:
+
+- **Active** - Highlighted border, primary color
+- **Completed** - Checkmark, success color
+- **Revision** - Orange/warning color
+- **Branched** - Dotted connection line
+- **Failed** - Error color, error icon
+
+### Typography
+
+```css
+.thought-content {
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.thought-number {
+  font-weight: 600;
+  color: var(--vscode-textLink-foreground);
+}
+```
+
+## Progress Indicators
+
+### Linear Progress
+
+Show overall thought progress:
+
+```html
+<div class="progress-bar">
+  <div class="progress-fill" style="width: 60%;"></div>
+  <span class="progress-text">6/10 thoughts</span>
+</div>
+```
+
+### Metrics Display
+
+```html
+<div class="metrics">
+  <div class="metric">
+    <span class="metric-label">Total Thoughts</span>
+    <span class="metric-value">10</span>
+  </div>
+  <div class="metric">
+    <span class="metric-label">Revisions</span>
+    <span class="metric-value">2</span>
+  </div>
+  <div class="metric">
+    <span class="metric-label">Branches</span>
+    <span class="metric-value">1</span>
+  </div>
+  <div class="metric">
+    <span class="metric-label">Depth</span>
+    <span class="metric-value">5</span>
+  </div>
+</div>
+```
+
+## Animations
+
+Use subtle animations for updates:
+
+```css
+.thought-node {
+  transition: all 0.3s ease;
+}
+
+.thought-node.new {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+```
+
+## Interactive Features
+
+### Context Menus
+
+Add context menu actions to tree items:
+
+```typescript
+// In package.json
+"menus": {
+  "view/item/context": [
+    {
+      "command": "sequential-thinking-vis.copyThought",
+      "when": "view == sequentialThinkingView && viewItem == thought"
+    },
+    {
+      "command": "sequential-thinking-vis.exportThought",
+      "when": "view == sequentialThinkingView && viewItem == thought"
+    }
+  ]
+}
+```
+
+### Hover Information
+
+Show additional info on hover:
+
+```typescript
+provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover {
+  return new vscode.Hover([
+    `**Thought ${thought.number}**`,
+    `Status: ${thought.nextThoughtNeeded ? 'In Progress' : 'Complete'}`,
+    `Progress: ${thought.number}/${thought.totalThoughts}`
+  ]);
+}
+```
+
+## Responsive Design
+
+Support different panel sizes:
+
+```css
+.thought-graph {
+  min-width: 300px;
+  max-width: 100%;
+}
+
+@media (max-width: 500px) {
+  .thought-graph svg {
+    height: 400px;
+  }
+
+  .metrics {
+    flex-direction: column;
+  }
+}
+```
+
+## Accessibility
+
+### ARIA Labels
+
+```html
+<div role="tree" aria-label="Sequential Thinking Tree">
+  <div role="treeitem" aria-level="1" aria-expanded="true">Thought 1</div>
+</div>
+```
+
+### Keyboard Navigation
+
+Support keyboard controls:
+
+- Arrow keys: Navigate tree
+- Enter: Expand/collapse
+- Space: Select thought
+- Tab: Move between sections
+
+### Screen Reader Support
+
+```html
+<span class="sr-only"> Thought {{number}} of {{total}}: {{content}} </span>
+```
+
+## Performance
+
+### Virtual Scrolling
+
+For large thought trees, implement virtual scrolling:
+
+```typescript
+class VirtualTreeProvider {
+  private visibleRange = { start: 0, end: 50 };
+
+  getChildren(element?: ThoughtNode): ThoughtNode[] {
+    if (!element) {
+      // Return only visible root nodes
+      return this.rootNodes.slice(this.visibleRange.start, this.visibleRange.end);
+    }
+    return element.children;
+  }
+}
+```
+
+### Debounced Updates
+
+Prevent excessive re-renders:
+
+```typescript
+private updateDebounced = debounce(() => {
+  this._onDidChangeTreeData.fire(undefined);
+}, 100);
+```
+
+## Export Formats
+
+Support exporting visualizations:
+
+- **Markdown** - Formatted thought tree
+- **JSON** - Raw thought data
+- **SVG** - Thought graph image
+- **HTML** - Interactive visualization
+
+## Best Practices
+
+1. **Theme compatibility** - Always use VS Code CSS variables
+2. **Efficient rendering** - Update only changed nodes
+3. **Clear hierarchy** - Use indentation and icons
+4. **Meaningful labels** - Descriptive node text
+5. **Responsive feedback** - Immediate UI updates
+6. **Graceful degradation** - Handle missing data
+7. **Consistent spacing** - Follow VS Code spacing conventions
+8. **Loading states** - Show spinners for async operations

@@ -1,0 +1,96 @@
+---
+globs: *.ts,*.tsx
+---
+
+# TypeScript Coding Standards
+
+## General Rules
+
+- Always use TypeScript strict mode (enabled in [tsconfig.json](mdc:tsconfig.json))
+- Prefer explicit types over implicit `any`
+- Use `const` by default, `let` only when mutation is needed
+- Never use `var`
+
+## Naming Conventions
+
+- **Classes/Interfaces/Types**: PascalCase (e.g., `ThoughtTreeProvider`, `MCPClient`)
+- **Functions/Variables**: camelCase (e.g., `activateExtension`, `thoughtData`)
+- **Constants**: SCREAMING_SNAKE_CASE (e.g., `MAX_THOUGHT_DEPTH`)
+- **Private members**: prefix with underscore (e.g., `_internalState`)
+- **File names**: kebab-case (e.g., `thought-tree-provider.ts`)
+
+## Import Organization
+
+Order imports as follows:
+
+1. Node built-ins (e.g., `import * as path from 'path'`)
+2. VS Code API (e.g., `import * as vscode from 'vscode'`)
+3. Third-party libraries (e.g., `import { Client } from '@modelcontextprotocol/sdk'`)
+4. Local imports (e.g., `import { ThoughtData } from './types'`)
+
+Use absolute imports from workspace root when possible.
+
+## Type Definitions
+
+- Define interfaces for all data structures
+- Use type unions for discriminated unions
+- Avoid type assertions unless absolutely necessary
+- Document complex types with JSDoc comments
+
+Example:
+
+```typescript
+/**
+ * Represents a single thought in the sequential thinking process
+ */
+interface Thought {
+  thought: string;
+  thoughtNumber: number;
+  totalThoughts: number;
+  nextThoughtNeeded: boolean;
+  isRevision?: boolean;
+  revisesThought?: number;
+}
+```
+
+## Async/Await
+
+- Always use `async/await` over raw Promises
+- Handle errors with try/catch blocks
+- Use `Promise.all()` for parallel operations
+- Never swallow errors silently
+
+## VS Code Extension Patterns
+
+- Always dispose of subscriptions via `context.subscriptions.push()`
+- Use `vscode.Disposable` for cleanup logic
+- Prefer commands over direct function calls for user actions
+- Use configuration API for user settings
+
+## Error Handling
+
+- Show user-friendly error messages via `vscode.window.showErrorMessage()`
+- Log detailed errors to extension output channel
+- Never expose internal errors to users
+- Validate inputs at boundaries
+
+## Comments and Documentation
+
+- Use JSDoc for all exported functions and classes
+- Explain _why_, not _what_ (code should be self-documenting)
+- Add TODO comments for planned features
+- Include examples in JSDoc for complex APIs
+
+## Code Organization
+
+- Keep files under 300 lines
+- One class/interface per file (unless tightly coupled)
+- Group related functionality in modules
+- Export only what's needed
+
+## Testing
+
+- Write unit tests for utilities in `/test/suite/`
+- Mock VS Code API using test doubles
+- Test both success and error paths
+- Use descriptive test names

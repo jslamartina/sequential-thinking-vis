@@ -13,4 +13,6 @@ tsconfig.json
 .eslintrc.json
 PLAN.md
 THOUGHT_TREE.md
+.env
+.env.*
 

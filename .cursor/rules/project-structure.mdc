@@ -1,0 +1,64 @@
+---
+alwaysApply: true
+---
+
+# Project Structure and Architecture
+
+This is an MCP Sequential Thinking Visualization extension for VS Code and Cursor.
+
+## Core Files
+
+- [src/extension.ts](mdc:src/extension.ts) - Main extension entry point with `activate()` and `deactivate()` lifecycle hooks
+- [package.json](mdc:package.json) - Extension manifest defining commands, contributions, and dependencies
+- [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration
+
+## Directory Structure
+
+### `/src/` - Source Code
+
+- **commands/** - Command implementations (e.g., palette commands)
+- **views/** - Tree view and webview providers for UI components
+- **providers/** - Data providers for thought data, MCP connections
+- **utils/** - Shared utility functions and helpers
+
+### `/test/` - Testing
+
+- **suite/** - Test suites using Mocha framework
+
+### `/out/` - Compiled Output
+
+- Generated JavaScript from TypeScript compilation
+- Do not manually edit files here
+
+### `/resources/` - Static Assets
+
+- **icons/** - Extension icons and graphics
+
+### `/docs/` - Documentation
+
+- **archive/** - Historical documentation and plans
+
+## Key Dependencies
+
+- `@modelcontextprotocol/sdk` - MCP client SDK for server communication
+- `vscode` - VS Code extension API (compatible with Cursor)
+
+## Development Workflow
+
+1. Make changes in `/src/`
+2. Run `npm run compile` or `npm run watch`
+3. Press F5 to launch Extension Development Host
+4. Test changes in the development instance
+
+## Extension Lifecycle
+
+The extension follows VS Code's activation pattern:
+
+1. Extension loads when a command is executed (lazy activation)
+2. `activate()` is called to initialize services
+3. Commands, views, and providers are registered
+4. `deactivate()` is called on shutdown to clean up resources
+
+## Compatibility Note
+
+Since Cursor is built on VS Code, this extension works identically in both editors using the same VS Code Extension API.

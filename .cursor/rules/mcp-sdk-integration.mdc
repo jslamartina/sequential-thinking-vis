@@ -1,0 +1,121 @@
+---
+description: Guidelines for integrating the MCP SDK to connect to Model Context Protocol servers
+---
+
+# MCP SDK Integration Guidelines
+
+## MCP Sequential Thinking Tool
+
+This extension visualizes the `sequentialthinking` tool from `@modelcontextprotocol/server-sequential-thinking`.
+
+### Tool Schema
+
+The sequential thinking tool accepts these parameters:
+
+```typescript
+interface SequentialThinkingParams {
+  thought: string; // Current thinking step
+  nextThoughtNeeded: boolean; // Whether another thought is needed
+  thoughtNumber: number; // Current thought number (1-based)
+  totalThoughts: number; // Estimated total thoughts needed
+  isRevision?: boolean; // Whether this revises previous thinking
+  revisesThought?: number; // Which thought is being reconsidered
+  branchFromThought?: number; // Branching point thought number
+  branchId?: string; // Branch identifier
+  needsMoreThoughts?: boolean; // If more thoughts needed than estimated
+}
+```
+
+## MCP Client Connection
+
+### Initialization
+
+- Initialize MCP client in `activate()` function
+- Use `@modelcontextprotocol/sdk` Client class
+- Support multiple transport types (stdio, HTTP)
+- Handle connection errors gracefully
+
+### Connection Lifecycle
+
+1. Connect to MCP server on extension activation
+2. Subscribe to tool call events
+3. Parse sequential thinking tool invocations
+4. Update visualization in real-time
+5. Clean up connections in `deactivate()`
+
+### Real-time Event Handling
+
+- Listen for MCP server tool call events
+- Filter for `sequentialthinking` tool invocations
+- Parse parameters and update thought tree
+- Handle connection drops and reconnections
+- Queue updates if UI not ready
+
+## Data Flow
+
+```
+MCP Server → MCP Client → Event Parser → Thought State Manager → UI Providers
+```
+
+1. **MCP Server** emits tool call events
+2. **MCP Client** receives and forwards events
+3. **Event Parser** extracts thought data
+4. **Thought State Manager** updates internal state
+5. **UI Providers** render visualization
+
+## Thought Tree Structure
+
+Maintain an in-memory tree structure:
+
+```typescript
+interface ThoughtNode {
+  id: string;
+  thought: string;
+  number: number;
+  parent?: ThoughtNode;
+  children: ThoughtNode[];
+  branch?: string;
+  isRevision: boolean;
+  revisesNode?: ThoughtNode;
+}
+```
+
+## Error Handling
+
+- Handle MCP connection failures
+- Gracefully degrade if server unavailable
+- Show connection status in UI
+- Provide manual reconnect option
+- Log MCP protocol errors to output channel
+
+## Configuration
+
+Support user configuration for:
+
+- MCP server connection details (host, port, transport)
+- Auto-connect on startup
+- Visualization preferences
+- Thought history limits
+
+## Best Practices
+
+- Cache thought data to prevent loss on disconnect
+- Implement exponential backoff for reconnections
+- Validate MCP server responses
+- Support multiple simultaneous thought sessions
+- Persist thought history across extension reloads
+
+## Testing MCP Integration
+
+- Mock MCP server for unit tests
+- Test connection lifecycle
+- Test thought tree building
+- Test revision handling
+- Test branch visualization
+- Test error recovery
+
+## Resources
+
+- [MCP Documentation](https://modelcontextprotocol.io/)
+- [Sequential Thinking Server](https://github.com/modelcontextprotocol/servers/tree/main/src/sequential-thinking)
+- [MCP SDK Reference](https://github.com/modelcontextprotocol/typescript-sdk)

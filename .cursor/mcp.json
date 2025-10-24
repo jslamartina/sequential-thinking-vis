@@ -1,44 +1,42 @@
 {
-    "mcpServers": {
-      "web_fetch": {
-        "command": "uv",
-        "args": ["run", "--with", "mcp-server-fetch", "mcp-server-fetch"]
-      },
-      "docker": {
-        "command": "uv",
-        "args": ["run", "--with", "mcp-server-docker", "mcp-server-docker"]
-      },
-      "git": {
-        "command": "uv",
-        "args": ["run", "--with", "mcp-server-git", "mcp-server-git"]
-      },
-      "python": {
-        "command": "uv",
-        "args": [
-          "run",
-          "--with",
-          "mcp-python-interpreter",
-          "mcp-python-interpreter"
-        ]
-      },
-      "time": {
-        "command": "uv",
-        "args": [
-          "run",
-          "--with",
-          "mcp-server-time",
-          "mcp-server-time",
-          "--local-timezone=America/Chicago"
-        ]
-      },
-      "filesystem": {
-        "command": "npm",
-        "args": ["exec", "-y", "@modelcontextprotocol/server-filesystem"]
-      },
-      "sequential-thinking": {
-        "command": "npm",
-        "args": ["exec", "-y", "@modelcontextprotocol/server-sequential-thinking"]
-      }
+  "mcpServers": {
+    "web_fetch": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp-server-fetch", "mcp-server-fetch"]
+    },
+    "docker": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp-server-docker", "mcp-server-docker"]
+    },
+    "git": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp-server-git", "mcp-server-git"]
+    },
+    "github": {
+      "command": "scripts/start-github-mcp.sh",
+      "args": []
+    },
+    "python": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp-python-interpreter", "mcp-python-interpreter"]
+    },
+    "time": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp-server-time",
+        "mcp-server-time",
+        "--local-timezone=America/Chicago"
+      ]
+    },
+    "filesystem": {
+      "command": "npm",
+      "args": ["exec", "-y", "@modelcontextprotocol/server-filesystem"]
+    },
+    "sequential-thinking": {
+      "command": "npm",
+      "args": ["exec", "-y", "@modelcontextprotocol/server-sequential-thinking"]
     }
   }
-  
+}
