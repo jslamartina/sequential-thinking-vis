@@ -276,11 +276,7 @@ suite('MCPClient Unit Tests', () => {
       const customChannel = vscode.window.createOutputChannel('Custom');
       const client = new MCPClient(customChannel);
 
-      assert.strictEqual(
-        client.getOutputChannel(),
-        customChannel,
-        'Should use provided channel'
-      );
+      assert.strictEqual(client.getOutputChannel(), customChannel, 'Should use provided channel');
 
       client.dispose();
       customChannel.dispose();
