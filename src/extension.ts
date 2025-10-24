@@ -13,11 +13,20 @@ import { showThoughtDetailsCommand } from './commands/showThoughtDetails';
 
 // Global MCP client instance
 let mcpClient: MCPClient | null = null;
+let treeProvider: ThoughtTreeProvider | null = null;
+
+/**
+ * Extension API exposed to tests
+ */
+export interface ExtensionAPI {
+  getMCPClient(): MCPClient | null;
+  getTreeProvider(): ThoughtTreeProvider | null;
+}
 
 /**
  * This method is called when the extension is activated.
  */
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<ExtensionAPI> {
   try {
     console.log('MCP Sequential Thinking Visualization is now active!');
 
@@ -26,7 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(mcpClient);
 
     // Create tree view provider
-    const treeProvider = new ThoughtTreeProvider(mcpClient);
+    treeProvider = new ThoughtTreeProvider(mcpClient);
 
     // Register tree view
     const treeView = vscode.window.createTreeView('sequentialThinkingView', {
@@ -79,6 +88,12 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     vscode.window.showInformationMessage('MCP Sequential Thinking Visualization activated!');
+
+    // Return API for tests
+    return {
+      getMCPClient: () => mcpClient,
+      getTreeProvider: () => treeProvider,
+    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Extension activation failed:', error);
@@ -100,4 +115,6 @@ export async function deactivate() {
     await mcpClient.disconnect();
     mcpClient = null;
   }
+
+  treeProvider = null;
 }

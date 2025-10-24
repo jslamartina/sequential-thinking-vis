@@ -26,10 +26,13 @@ export class MCPClient extends EventEmitter {
   private connectionState: ConnectionState = ConnectionState.Disconnected;
   private currentSession: ThoughtTree | null = null;
   private outputChannel: vscode.OutputChannel;
+  private isTestMode: boolean = false;
 
-  constructor() {
+  constructor(outputChannel?: vscode.OutputChannel, testMode: boolean = false) {
     super();
-    this.outputChannel = vscode.window.createOutputChannel('MCP Sequential Thinking');
+    this.outputChannel =
+      outputChannel || vscode.window.createOutputChannel('MCP Sequential Thinking');
+    this.isTestMode = testMode;
   }
 
   /**
@@ -44,6 +47,13 @@ export class MCPClient extends EventEmitter {
    */
   getCurrentSession(): ThoughtTree | null {
     return this.currentSession;
+  }
+
+  /**
+   * Check if currently connected to MCP server
+   */
+  isConnected(): boolean {
+    return this.connectionState === ConnectionState.Connected;
   }
 
   /**
