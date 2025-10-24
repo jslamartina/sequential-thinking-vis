@@ -10,6 +10,10 @@ Model Context Protocol (MCP) tools are available to the coding agent during deve
 
 ### 🧠 **Sequential Thinking** (`mcp_sequential-thinking_sequentialthinking`)
 
+**DO's:**
+
+- ✅ Output a visualization of the thought tree when a branch or chain of thought is completed.
+
 **When to use:**
 
 - ✅ Breaking down complex multi-step implementation tasks

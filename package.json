@@ -5,20 +5,96 @@
   "version": "0.0.1",
   "publisher": "josephlamartina",
   "engines": {
-    "vscode": "^1.105.0"
+    "vscode": "^1.95.0"
   },
   "categories": [
     "Visualization",
     "Other"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/src/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sequential-thinking",
+          "title": "Sequential Thinking",
+          "icon": "resources/icons/brain.svg"
+        }
+      ]
+    },
+    "views": {
+      "sequential-thinking": [
+        {
+          "id": "sequentialThinkingView",
+          "name": "Thought Tree",
+          "icon": "resources/icons/brain.svg"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "sequential-thinking-vis.helloWorld",
-        "title": "MCP Sequential Thinking: Hello World"
+        "command": "sequential-thinking-vis.connectServer",
+        "title": "MCP Sequential Thinking: Connect to Server",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "sequential-thinking-vis.disconnectServer",
+        "title": "MCP Sequential Thinking: Disconnect from Server",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "sequential-thinking-vis.startSession",
+        "title": "MCP Sequential Thinking: Start New Session",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "sequential-thinking-vis.showThoughtDetails",
+        "title": "MCP Sequential Thinking: Show Thought Details"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "sequential-thinking-vis.connectServer",
+          "when": "view == sequentialThinkingView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "sequential-thinking-vis.startSession",
+          "when": "view == sequentialThinkingView",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "MCP Sequential Thinking",
+      "properties": {
+        "sequential-thinking-vis.serverCommand": {
+          "type": "string",
+          "default": "npx",
+          "description": "Command to start the MCP sequential-thinking server"
+        },
+        "sequential-thinking-vis.serverArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "-y",
+            "@modelcontextprotocol/server-sequential-thinking"
+          ],
+          "description": "Arguments for the MCP server command"
+        },
+        "sequential-thinking-vis.autoConnect": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically connect to MCP server on extension activation"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -44,7 +120,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.9.1",
-    "@types/vscode": "^1.105.0",
+    "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "@vscode/test-electron": "^2.5.2",

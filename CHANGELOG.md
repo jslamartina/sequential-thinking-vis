@@ -7,31 +7,117 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- MCP server integration
-- Real-time thought tree visualization
-- Interactive thought graph in webview
-- Branch and revision tracking
-- Thought history and replay
-- Export functionality (Markdown, PNG)
+### Fixed
+- Extension activation timing (switched from `onView` to `onStartupFinished`)
+- Missing icon property in view definition
+- VS Code version compatibility (downgraded from ^1.105.0 to ^1.95.0 for Cursor compatibility)
+- Main entry point path corrected from `./out/extension.js` to `./out/src/extension.js`
+- Type definition version alignment (@types/vscode now matches engine version)
+- Added error handling with try-catch in activation function
+
+### Added
+- Comprehensive automated test suite (13 tests)
+- Extension lifecycle tests (7 tests)
+- Command execution tests (6 tests)
+- Configuration validation tests
+- Thought tree debugging session documentation
+
+### Planned for v0.1.0
+- Session persistence between reloads
+- Export thought trees to Markdown/JSON
+- Thought metrics and analytics dashboard
+- Search and filter thoughts
+- Session history view
+
+### Planned for v0.2.0+
+- Observer Mode: Watch AI thinking in real Cursor sessions
+- Graph visualization of thought branches
+- Timeline view of thinking process
+- Customizable themes and layouts
+- Collaboration features
 
 ## [0.0.1] - 2025-10-24
 
 ### Added
-- Initial project scaffolding
-- Basic extension structure
-- TypeScript configuration
-- Build and test infrastructure
-- Hello World command for testing
-- Documentation (README, PLAN, THOUGHT_TREE)
-- Cursor and VS Code compatibility
 
-### Development
-- Set up npm package with dependencies
-- Created directory structure
-- Configured debugging with launch.json
-- Set up automated builds with tasks.json
-- Implemented basic extension activation
+**MCP Integration**
+- Full MCP client implementation with `@modelcontextprotocol/sdk`
+- Connection to `@modelcontextprotocol/server-sequential-thinking`
+- Stdio transport for subprocess communication
+- Connection lifecycle management (connect, disconnect, reconnect)
+- Configurable server command and arguments
+
+**Commands**
+- `MCP Sequential Thinking: Connect to Server` - Establish MCP server connection
+- `MCP Sequential Thinking: Disconnect from Server` - Close connection
+- `MCP Sequential Thinking: Start New Session` - Begin interactive thinking session
+- `MCP Sequential Thinking: Show Thought Details` - View detailed thought information
+
+**UI Components**
+- Tree view in sidebar with brain icon
+- Real-time thought tree visualization
+- Hierarchical display of thoughts with progress indicators
+- Icons for thought types (normal, revision, branch, final)
+- Rich tooltips with thought metadata
+
+**Webview**
+- Detailed thought inspection panel
+- HTML view with VS Code theme integration
+- Displays full thought content, progress, and metadata
+- Badges for special thought types
+
+**Interactive Sessions**
+- Guided prompts for creating thoughts
+- Support for normal sequential thoughts
+- Support for revision thoughts (correcting previous thinking)
+- Support for branch thoughts (exploring alternatives)
+- Dynamic thought estimation adjustment
+- Real-time progress tracking
+
+**Data Models**
+- TypeScript interfaces for ThoughtNode, ThoughtTree
+- Connection state management
+- Session metadata tracking
+- Timestamp recording
+
+**Configuration**
+- `sequential-thinking-vis.serverCommand` - Customize server command
+- `sequential-thinking-vis.serverArgs` - Customize server arguments
+- `sequential-thinking-vis.autoConnect` - Auto-connect on activation
+
+**Documentation**
+- Comprehensive README with usage guide
+- Detailed testing guide (docs/TESTING.md)
+- Sequential thinking guide
+- Thought tree archives with visualizations
+- Code quality standards and rules
+
+**Development**
+- TypeScript strict mode
+- ESLint with Prettier integration
+- Automated formatting and linting
+- Build and watch scripts
+- Extension packaging setup
+
+### Architecture
+
+**Standalone Mode Implementation**
+- Extension runs its own MCP server subprocess
+- User creates thinking sessions via commands
+- Interactive prompt-based thought creation
+- Self-contained for testing and demonstration
+
+**Event-Driven Updates**
+- EventEmitter pattern for real-time UI updates
+- Tree view refreshes on thought additions
+- Output channel logging for debugging
+
+**VS Code Integration**
+- Activity bar icon for easy access
+- Command palette integration
+- TreeView API for hierarchical display
+- Webview API for rich content display
+- Configuration API for user settings
 
 ---
 
