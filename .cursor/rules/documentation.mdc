@@ -299,10 +299,56 @@ docs/
 ├── decisions/
 │   ├── 001-tree-view.md        # ADRs
 │   └── 002-mcp-sdk.md
+├── archive/
+│   ├── plans/
+│   │   └── 2025-10-24_1600_INITIAL_PROJECT_SETUP.md
+│   └── thought_trees/
+│       └── 2025-10-24_1530_FEATURE_IMPLEMENTATION.md
 └── images/
     ├── screenshot-tree.png
     └── diagram-architecture.svg
 ```
+
+### Archive Naming Conventions
+
+All documents in `docs/archive/**` must be prefixed with a timestamp accurate to the minute:
+
+**Format:** `YYYY-MM-DD_HHMM_DESCRIPTIVE_NAME.md`
+
+**Examples:**
+
+```
+✅ Good:
+- 2025-10-24_1600_INITIAL_PROJECT_SETUP.md
+- 2025-10-24_2315_E2E_TESTING_IMPLEMENTATION.md
+- 2025-10-25_0000_OBSERVER_MODE_IMPLEMENTATION.md
+- 2025-10-25_0100_DOCUMENTATION_UPDATE.md
+
+❌ Bad:
+- 2025-10-24_MCP_CONNECTION_SETUP.md          # Missing time
+- 2025-10-24_16_FEATURE_WORK.md               # Hour only (not minute-precise)
+- 10-24-2025_1600_IMPLEMENTATION.md            # Wrong date format
+- 2025-10-24-16-00-IMPLEMENTATION.md           # Wrong separator
+```
+
+**Guidelines:**
+
+- Use 24-hour time format (HHMM, not HH:MM)
+- Use underscore `_` to separate date, time, and description
+- Use uppercase with underscores for description (SCREAMING_SNAKE_CASE)
+- Record timestamp when work starts, not when saved
+- Maintain chronological sorting by filename
+- Applies to all subdirectories: `plans/`, `thought_trees/`, etc.
+
+**Rationale:**
+
+Minute-precision timestamps provide:
+
+- Accurate chronological ordering
+- Unique filenames even for same-day documents
+- Clear audit trail of when work occurred
+- Easy filtering by date ranges
+- Consistency across the archive
 
 ### Markdown Guidelines
 

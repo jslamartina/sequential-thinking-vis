@@ -53,6 +53,11 @@
       {
         "command": "sequential-thinking-vis.showThoughtDetails",
         "title": "MCP Sequential Thinking: Show Thought Details"
+      },
+      {
+        "command": "sequential-thinking-vis.clearObserver",
+        "title": "MCP Sequential Thinking: Clear Observer Session",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -66,6 +71,11 @@
           "command": "sequential-thinking-vis.startSession",
           "when": "view == sequentialThinkingView",
           "group": "navigation@2"
+        },
+        {
+          "command": "sequential-thinking-vis.clearObserver",
+          "when": "view == sequentialThinkingView",
+          "group": "navigation@3"
         }
       ]
     },

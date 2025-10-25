@@ -4,9 +4,11 @@ A VS Code and Cursor extension to visualize and track the [@modelcontextprotocol
 
 ## Features
 
-🧠 **Real-time Thought Tracking** - Watch AI reasoning unfold as it happens
+🔴 **Observer Mode** - Watch real AI thinking in Claude Desktop, Cursor, or other MCP clients
 
-🌳 **Visual Thought Trees** - See the complete structure of sequential thinking processes
+🧠 **Real-time Thought Tracking** - See AI reasoning unfold as it happens with zero setup
+
+🌳 **Visual Thought Trees** - Complete structure of sequential thinking processes in your sidebar
 
 🔀 **Branch Visualization** - Track parallel thinking paths and hypothesis exploration
 
@@ -38,53 +40,22 @@ See [README-DEV.md](README-DEV.md) for development installation and setup instru
 
 ## Usage
 
-### Quick Start
+### Quick Start 🔥
 
-1. **Connect to MCP Server**
-   - Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
-   - Run: `MCP Sequential Thinking: Connect to Server`
-   - Wait for "✓ Connected" notification
+1. **Configure your AI tool** (one-time setup)
+   - Update MCP config to use the extension's observer server
+   - See [Setup Instructions](#observer-mode-setup) below
 
-2. **Start a Thinking Session**
-   - Run: `MCP Sequential Thinking: Start New Session`
-   - Enter your problem or query
-   - Follow the interactive prompts to add thoughts
+2. **Use your AI tool normally**
+   - Ask Claude Desktop or Cursor AI to use sequential-thinking
+   - The extension automatically visualizes thoughts in VS Code
 
-3. **View Your Thoughts**
-   - Click the brain icon (🧠) in the activity bar
-   - See your thoughts appear in the tree view
+3. **Watch in real-time**
+   - Open Sequential Thinking view in sidebar (🧠 icon)
+   - See "🔴 Live AI Observer" session with real-time thoughts
    - Click any thought to view details
 
-### Available Commands
-
-| Command                                           | Description                                   | Shortcut         |
-| ------------------------------------------------- | --------------------------------------------- | ---------------- |
-| `MCP Sequential Thinking: Connect to Server`      | Connect to the MCP sequential-thinking server | -                |
-| `MCP Sequential Thinking: Disconnect from Server` | Disconnect from the server                    | -                |
-| `MCP Sequential Thinking: Start New Session`      | Begin a new interactive thinking session      | -                |
-| `MCP Sequential Thinking: Show Thought Details`   | View detailed information about a thought     | Click on thought |
-
-### Creating Thoughts
-
-When you start a session, you'll be guided through an interactive process:
-
-1. **Enter your thought content** - Describe this step in your thinking
-2. **Continue or finish** - Choose if more thoughts are needed
-3. **Special thought types** (optional):
-   - **Normal thought** - Standard sequential step
-   - **Revision** - Correct or refine a previous thought
-   - **Branch** - Explore an alternative approach
-
-**Example Session:**
-
-```
-Query: "How should I implement user authentication?"
-
-Thought 1: "First, I need to choose between session-based and token-based auth..."
-Thought 2: "Token-based (JWT) is better for my API-first architecture..."
-Thought 3: "I'll need: registration, login, token refresh, and logout endpoints..."
-Thought 4: "Security considerations: password hashing, rate limiting, HTTPS only..."
-```
+**That's it!** No commands needed - just watch AI think.
 
 ### Viewing Thought Details
 
@@ -106,65 +77,118 @@ Click any thought in the tree to open a detailed view showing:
 ## Requirements
 
 - VS Code or Cursor v1.105.0 or higher
-- Node.js 18+ (for running the MCP server)
-- npm or npx (for installing the MCP server package)
+- Node.js 18+ (for running the observer server)
+- An AI tool that supports MCP (Claude Desktop, Cursor, etc.)
 
-## Extension Settings
+## Observer Mode Setup
 
-This extension contributes the following settings:
+To watch real AI thinking, configure your AI tool to use the extension's observer server.
 
-| Setting                                 | Type    | Default                                                      | Description                                                 |
-| --------------------------------------- | ------- | ------------------------------------------------------------ | ----------------------------------------------------------- |
-| `sequential-thinking-vis.serverCommand` | string  | `"npx"`                                                      | Command to start the MCP sequential-thinking server         |
-| `sequential-thinking-vis.serverArgs`    | array   | `["-y", "@modelcontextprotocol/server-sequential-thinking"]` | Arguments for the MCP server command                        |
-| `sequential-thinking-vis.autoConnect`   | boolean | `false`                                                      | Automatically connect to MCP server on extension activation |
+**📖 [Complete Setup Guide](docs/OBSERVER-MODE-SETUP.md)**
 
-### Example Configuration
+### Quick Setup
 
-Add to your `settings.json`:
+1. **Find your extension path:**
 
-```json
-{
-  "sequential-thinking-vis.autoConnect": true,
-  "sequential-thinking-vis.serverCommand": "npx",
-  "sequential-thinking-vis.serverArgs": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
-}
+   ```bash
+   # Example for source install
+   /Users/yourusername/Projects/sequential-thinking-vis/out/mcp-server/index.js
+   ```
+
+2. **Configure your AI tool** (Claude Desktop or Cursor):
+
+   Edit the MCP configuration file and add:
+
+   ```json
+   {
+     "mcpServers": {
+       "sequential-thinking": {
+         "command": "node",
+         "args": ["/absolute/path/to/sequential-thinking-vis/out/mcp-server/index.js"]
+       }
+     }
+   }
+   ```
+
+   **Config file locations:**
+   - **Claude Desktop:** `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+   - **Cursor:** `~/.cursor/mcp.json`
+
+3. **Restart your AI tool**
+
+4. **Open Sequential Thinking sidebar in VS Code** (🧠 icon)
+
+5. **Use your AI normally** - The extension automatically observes when the AI uses sequential-thinking!
+
+**Need help?** See the [detailed setup guide](docs/OBSERVER-MODE-SETUP.md) for platform-specific instructions and troubleshooting.
+
+**📚 Documentation:**
+
+- [Setup Guide](docs/OBSERVER-MODE-SETUP.md) - Detailed configuration for all platforms
+- [Usage Guide](docs/OBSERVER-MODE-USAGE.md) - Tips and patterns for effective observation
+- [Architecture](docs/OBSERVER-MODE-ARCHITECTURE.md) - Technical details for developers
+
+---
+
+## Testing MCP Connection
+
+You can verify the MCP connection is working correctly using the included test script:
+
+```bash
+node scripts/test-mcp-connection.js
 ```
+
+This will:
+
+- ✅ Connect to the MCP server
+- ✅ List available tools
+- ✅ Call the sequential-thinking tool
+- ✅ Verify the response
+
+Expected output:
+
+```
+🔌 Testing MCP connection to sequential-thinking server...
+✅ Connected successfully!
+📋 Listing available tools...
+🧠 Testing sequential-thinking tool...
+✅ Tool call successful!
+🎉 All tests passed! MCP integration is working correctly.
+```
+
+For detailed MCP integration documentation, see [docs/MCP-INTEGRATION.md](docs/MCP-INTEGRATION.md).
 
 ## Troubleshooting
 
 ### Common Issues
 
-**"Failed to connect to MCP server"**
+**"Observer mode not available"**
 
 - Ensure Node.js 18+ is installed: `node --version`
-- Check if npx is available: `npx --version`
+- Check AI tool MCP configuration is correct
+- Verify path to `out/mcp-server/index.js` is absolute
+- Restart your AI tool after configuration changes
+- Test the connection: `node scripts/test-mcp-connection.js`
 - View detailed logs: `View > Output` → "MCP Sequential Thinking"
-
-**Commands not in Command Palette**
-
-- Reload VS Code window: `Cmd+R` / `Ctrl+R`
-- Reinstall the extension
-- Check for conflicting extensions
 
 **Tree view shows no thoughts**
 
-- Make sure you've started a session
-- Add at least one thought to see it in the tree
+- Make sure your AI tool is configured to use the tapper
+- Ask your AI to use the sequential-thinking tool
+- Check that the tapper server is running (look for port file in config dir)
 - Check Output panel for errors
 
 For more help, see the [full documentation](docs/) or [open an issue](https://github.com/josephlamartina/sequential-thinking-vis/issues).
 
 ## Known Issues
 
-- Sessions are not persisted between extension reloads
-- Only one active session at a time (previous sessions are cleared)
-- Observer Mode (watching real AI thinking) not yet implemented
-- No export functionality yet
+- Observer sessions are not persisted between extension reloads
+- No export functionality yet (JSON/markdown export coming soon)
+- Only one observer session at a time (most recent AI conversation)
 
 ## Roadmap
 
-### v0.1.0 (Next)
+### v0.1.0 (Next Release)
 
 - 📦 Session persistence
 - 💾 Export thought trees to markdown/JSON
@@ -173,31 +197,43 @@ For more help, see the [full documentation](docs/) or [open an issue](https://gi
 
 ### v0.2.0 (Future)
 
-- 👀 Observer Mode: Watch AI thinking in real Cursor sessions
-- 📈 Graph visualization of thought branches
+- 🔍 Search and filter thoughts across sessions
+- 📈 Graph visualization of thought branches (D3.js)
 - 🎨 Customizable themes and layouts
 - 🔄 Session history and replay
+- 📊 Analytics dashboard
 
 ### v0.3.0 (Future)
 
 - 👥 Collaboration: Share thought trees with team
 - 🔗 Integration with other MCP tools
 - 📱 Timeline view of thinking process
+- 🌐 Remote observation capabilities
 
 ## Release Notes
 
-### 0.0.1 (Current - October 2025)
+### 0.0.2 (October 2025)
 
-**Initial Release - Standalone Mode**
+**Observer Mode Release**
 
-- ✅ MCP client integration with sequential-thinking server
-- ✅ Interactive thinking session creation
+- ✅ Stream tapper for transparent MCP proxying
+- ✅ Auto-detection and connection to observer via port file
+- ✅ Real-time visualization of AI thinking with TCP broadcast
+- ✅ Support for multiple AI tools (Claude Desktop, Cursor)
+- ✅ ObserverClient with auto-reconnection (5-second retry)
+- ✅ Platform-specific configuration management (macOS, Windows, Linux)
+- ✅ Clear observer session command
+- ✅ Type-safe implementation with proper error handling
+
+### 0.0.1 (October 2025)
+
+**Initial Release**
+
 - ✅ Tree view visualization in sidebar
-- ✅ Webview for detailed thought inspection
+- ✅ Thought details inspection
 - ✅ Support for revisions and branches
 - ✅ Real-time thought updates
-- ✅ Configurable server settings
-- ✅ Connection management commands
+- ✅ Cross-platform support (macOS, Windows, Linux)
 
 ## For Developers
 

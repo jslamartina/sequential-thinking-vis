@@ -34,9 +34,11 @@
       "command": "npm",
       "args": ["exec", "-y", "@modelcontextprotocol/server-filesystem"]
     },
-    "sequential-thinking": {
-      "command": "npm",
-      "args": ["exec", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    "sequential-thinking-vis": {
+      "command": "node",
+      "args": [
+        "/Users/josephlamartina/Projects/sequential-thinking-vis/out/src/mcp-server/index.js"
+      ]
     }
   }
 }

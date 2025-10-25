@@ -5,15 +5,18 @@
 
 import * as vscode from 'vscode';
 import { MCPClient } from './providers/MCPClient';
+import { ObserverClient } from './providers/ObserverClient';
 import { ThoughtTreeProvider } from './views/ThoughtTreeProvider';
 import { connectServerCommand } from './commands/connectServer';
 import { disconnectServerCommand } from './commands/disconnectServer';
 import { startSessionCommand } from './commands/startSession';
 import { showThoughtDetailsCommand } from './commands/showThoughtDetails';
+import { clearObserverCommand } from './commands/clearObserver';
 
 // Global MCP client instance
 let mcpClient: MCPClient | null = null;
 let treeProvider: ThoughtTreeProvider | null = null;
+let observerClient: ObserverClient | null = null;
 
 /**
  * Extension API exposed to tests
@@ -34,8 +37,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Extens
     mcpClient = new MCPClient();
     context.subscriptions.push(mcpClient);
 
-    // Create tree view provider
-    treeProvider = new ThoughtTreeProvider(mcpClient);
+    // Create tree view provider (observer-only mode)
+    treeProvider = new ThoughtTreeProvider();
 
     // Register tree view
     const treeView = vscode.window.createTreeView('sequentialThinkingView', {
@@ -70,10 +73,49 @@ export async function activate(context: vscode.ExtensionContext): Promise<Extens
       )
     );
 
+    context.subscriptions.push(
+      vscode.commands.registerCommand('sequential-thinking-vis.clearObserver', () =>
+        clearObserverCommand(treeProvider!)
+      )
+    );
+
+    // Initialize observer client
+    observerClient = new ObserverClient();
+
+    // Wire observer events to tree provider
+    observerClient.on('thought', (event) => {
+      mcpClient!.getOutputChannel().appendLine(`📥 Thought received: ${JSON.stringify(event).substring(0, 100)}...`);
+      treeProvider!.addObservedThought(event);
+      mcpClient!.getOutputChannel().appendLine(`✓ Thought added to tree provider`);
+    });
+
+    observerClient.on('connected', () => {
+      mcpClient!.getOutputChannel().appendLine('✓ Observer mode active - watching AI thinking');
+      vscode.window.showInformationMessage('Observer mode active');
+    });
+
+    observerClient.on('disconnected', () => {
+      mcpClient!.getOutputChannel().appendLine('Observer mode disconnected');
+    });
+
+    observerClient.on('error', (err) => {
+      mcpClient!.getOutputChannel().appendLine(`Observer error: ${err.message}`);
+    });
+
+    // Auto-connect observer (fails silently if tapper not running)
+    observerClient.connect();
+
+    // Add to disposables
+    context.subscriptions.push({
+      dispose: () => {
+        observerClient?.dispose();
+      },
+    });
+
     // Show output channel
     mcpClient.getOutputChannel().appendLine('Extension activated');
 
-    // Auto-connect if configured
+    // Auto-connect MCP if configured
     const config = vscode.workspace.getConfiguration('sequential-thinking-vis');
     const autoConnect = config.get<boolean>('autoConnect', false);
 

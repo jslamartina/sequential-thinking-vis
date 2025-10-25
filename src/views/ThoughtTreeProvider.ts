@@ -1,13 +1,13 @@
 /**
- * TreeView provider for displaying sequential thinking thoughts
+ * TreeView provider for displaying sequential thinking thoughts in observer mode
  */
 
 import * as vscode from 'vscode';
-import { ThoughtNode, ThoughtTree } from '../types/thoughts';
-import { MCPClient } from '../providers/MCPClient';
+import { ThoughtNode, ThoughtTree, ThoughtEvent } from '../types/thoughts';
 
 /**
- * ThoughtTreeProvider manages the tree view display of sequential thoughts
+ * ThoughtTreeProvider manages the tree view display of observed sequential thoughts
+ * Observer-only mode: displays real-time thoughts from ObserverClient
  */
 export class ThoughtTreeProvider implements vscode.TreeDataProvider<ThoughtTreeItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<ThoughtTreeItem | undefined | null | void> =
@@ -16,29 +16,94 @@ export class ThoughtTreeProvider implements vscode.TreeDataProvider<ThoughtTreeI
   readonly onDidChangeTreeData: vscode.Event<ThoughtTreeItem | undefined | null | void> =
     this._onDidChangeTreeData.event;
 
-  private currentSession: ThoughtTree | null = null;
+  private observerSession: ThoughtTree | null = null;
 
-  constructor(private mcpClient: MCPClient) {
-    // Listen for thought updates from MCP client
-    this.mcpClient.on('thoughtAdded', () => {
-      this.refresh();
-    });
+  constructor() {
+    // Observer-only mode: no MCPClient dependency
+  }
 
-    this.mcpClient.on('sessionStarted', (session: ThoughtTree) => {
-      this.currentSession = session;
-      this.refresh();
-    });
+  /**
+   * Add a thought observed from the stream
+   */
+  addObservedThought(event: ThoughtEvent): void {
+    console.log('[ThoughtTreeProvider] addObservedThought() called');
+    console.log('[ThoughtTreeProvider] Event:', JSON.stringify(event).substring(0, 200));
 
-    this.mcpClient.on('sessionEnded', () => {
-      this.refresh();
-    });
+    // Initialize observer session if not exists
+    if (!this.observerSession) {
+      console.log('[ThoughtTreeProvider] Creating new observer session');
+      this.observerSession = {
+        sessionId: `observer-${Date.now()}`,
+        thoughts: [],
+        branches: new Map(),
+        metadata: {
+          startTime: new Date().toISOString(),
+          status: 'active',
+          initialQuery: 'Live AI Observer',
+        },
+      };
+    }
+
+    // Extract thought from event data
+    const thoughtData = event.data;
+    if (!thoughtData || typeof thoughtData !== 'object') {
+      console.log('[ThoughtTreeProvider] Invalid thought data');
+      return;
+    }
+
+    // Cast to record for property access
+    const data = thoughtData as Record<string, unknown>;
+    console.log('[ThoughtTreeProvider] Thought data keys:', Object.keys(data));
+
+    // Create thought node
+    const thought: ThoughtNode = {
+      thought: (data.thought as string) || '',
+      thoughtNumber: (data.thoughtNumber as number) || 0,
+      totalThoughts: (data.totalThoughts as number) || 0,
+      nextThoughtNeeded: (data.nextThoughtNeeded as boolean) !== false,
+      isRevision: data.isRevision as boolean | undefined,
+      revisesThought: data.revisesThought as number | undefined,
+      branchFromThought: data.branchFromThought as number | undefined,
+      branchId: data.branchId as string | undefined,
+      needsMoreThoughts: data.needsMoreThoughts as boolean | undefined,
+      timestamp: event.timestamp,
+    };
+
+    console.log(
+      `[ThoughtTreeProvider] Created thought node #${thought.thoughtNumber}: ${thought.thought.substring(0, 50)}...`
+    );
+
+    // Add to thoughts list
+    this.observerSession.thoughts.push(thought);
+    console.log(
+      `[ThoughtTreeProvider] Total thoughts now: ${this.observerSession.thoughts.length}`
+    );
+
+    // Organize by branch if applicable
+    if (thought.branchId) {
+      const branchThoughts = this.observerSession.branches.get(thought.branchId) || [];
+      branchThoughts.push(thought);
+      this.observerSession.branches.set(thought.branchId, branchThoughts);
+      console.log(`[ThoughtTreeProvider] Added to branch: ${thought.branchId}`);
+    }
+
+    // Refresh tree view
+    console.log('[ThoughtTreeProvider] Calling refresh()');
+    this.refresh();
+  }
+
+  /**
+   * Clear the observer session
+   */
+  clearObserverSession(): void {
+    this.observerSession = null;
+    this.refresh();
   }
 
   /**
    * Refresh the tree view
    */
   refresh(): void {
-    this.currentSession = this.mcpClient.getCurrentSession();
     this._onDidChangeTreeData.fire();
   }
 
@@ -53,39 +118,56 @@ export class ThoughtTreeProvider implements vscode.TreeDataProvider<ThoughtTreeI
    * Get children for tree hierarchy
    */
   getChildren(element?: ThoughtTreeItem): Thenable<ThoughtTreeItem[]> {
-    if (!this.currentSession) {
-      // No active session - show empty state
+    if (!this.observerSession) {
+      // No active observer session - show empty state
       return Promise.resolve([]);
     }
 
     if (!element) {
-      // Root level - show session info and all thoughts
-      const items: ThoughtTreeItem[] = [];
-
-      // Add session header
-      const sessionHeader = new ThoughtTreeItem(
-        `Session: ${this.currentSession.metadata.initialQuery || 'Untitled'}`,
-        '',
-        vscode.TreeItemCollapsibleState.Expanded,
-        null
-      );
-      sessionHeader.description = `${this.currentSession.thoughts.length} thoughts`;
-      sessionHeader.iconPath = new vscode.ThemeIcon('debug-start');
-      items.push(sessionHeader);
-
-      return Promise.resolve(items);
+      // Root: Show observer session header
+      return Promise.resolve([this.getObserverSessionHeader()]);
     }
 
-    // If it's the session header, show all thoughts
-    if (!element.thought) {
-      const thoughtItems = this.currentSession.thoughts.map((thought) =>
-        this.createThoughtItem(thought)
-      );
-      return Promise.resolve(thoughtItems);
+    if (element.type === 'session-header') {
+      // Expand session: Show its thoughts
+      return Promise.resolve(this.getThoughtsForSession());
     }
 
-    // Individual thoughts don't have children in this flat structure
+    // Thoughts don't have children
     return Promise.resolve([]);
+  }
+
+  /**
+   * Get the observer session header item
+   */
+  private getObserverSessionHeader(): ThoughtTreeItem {
+    const thoughtCount = this.observerSession?.thoughts.length || 0;
+    const label = `🔴 Live AI Observer (${thoughtCount} thoughts)`;
+
+    const item = new ThoughtTreeItem(
+      label,
+      '',
+      vscode.TreeItemCollapsibleState.Expanded,
+      null,
+      'session-header'
+    );
+
+    item.iconPath = new vscode.ThemeIcon('record');
+    item.tooltip = 'Real-time AI thinking session';
+    item.contextValue = 'session-observer';
+
+    return item;
+  }
+
+  /**
+   * Get thought items for the observer session
+   */
+  private getThoughtsForSession(): ThoughtTreeItem[] {
+    if (!this.observerSession) {
+      return [];
+    }
+
+    return this.observerSession.thoughts.map((thought) => this.createThoughtItem(thought));
   }
 
   /**
@@ -95,7 +177,13 @@ export class ThoughtTreeProvider implements vscode.TreeDataProvider<ThoughtTreeI
     const preview = this.getThoughtPreview(thought.thought);
     const label = `[${thought.thoughtNumber}/${thought.totalThoughts}] ${preview}`;
 
-    const item = new ThoughtTreeItem(label, '', vscode.TreeItemCollapsibleState.None, thought);
+    const item = new ThoughtTreeItem(
+      label,
+      '',
+      vscode.TreeItemCollapsibleState.None,
+      thought,
+      'thought'
+    );
 
     // Set icon based on thought type
     if (thought.isRevision) {
@@ -165,14 +253,15 @@ export class ThoughtTreeProvider implements vscode.TreeDataProvider<ThoughtTreeI
 }
 
 /**
- * Tree item representing a thought in the tree view
+ * Tree item representing a thought or session header in the tree view
  */
 export class ThoughtTreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
     public description: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-    public readonly thought: ThoughtNode | null
+    public readonly thought: ThoughtNode | null,
+    public readonly type: 'session-header' | 'thought' = 'thought'
   ) {
     super(label, collapsibleState);
     this.description = description;

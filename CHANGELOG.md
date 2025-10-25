@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+**Observer Mode - Watch Real AI Thinking 🔴**
+- Stream tapper for transparent MCP stdio proxying
+- TCP-based observation of JSON-RPC messages
+- Real-time thought extraction from AI ↔ Server communication
+- ObserverClient with auto-reconnection (5-second retry)
+- Platform-specific configuration management (macOS, Windows, Linux)
+- Observer session visualization in Tree View
+- `clearObserver` command to clear observed thoughts
+- Support for multiple AI tools (Claude Desktop, Cursor, etc.)
+
+**New Components**
+- `src/mcp-server/config.ts` - Platform-specific config paths and port file management
+- `src/mcp-server/index.ts` - Stream tapper for transparent proxying + TCP broadcast
+- `src/providers/ObserverClient.ts` - TCP client with JSON-RPC parsing and event emission
+- `src/commands/clearObserver.ts` - Command to clear observer session
+
+**Documentation**
+- Observer Mode setup guide (docs/OBSERVER-MODE-SETUP.md)
+- Observer Mode usage guide (docs/OBSERVER-MODE-USAGE.md)
+- Observer Mode architecture documentation (docs/OBSERVER-MODE-ARCHITECTURE.md)
+
+### Changed
+- TreeProvider refactored to observer-only mode (removed MCPClient dependency)
+- Extension auto-connects to observer when tapper detected
+- Live observer session displayed as "🔴 Live AI Observer" in tree view
+
 ### Fixed
 - Extension activation timing (switched from `onView` to `onStartupFinished`)
 - Missing icon property in view definition
@@ -15,7 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Type definition version alignment (@types/vscode now matches engine version)
 - Added error handling with try-catch in activation function
 
-### Added
+### Technical
+- Type-safe implementation with `unknown` instead of `any`
+- Proper error handling in catch blocks
+- Newline-delimited JSON-RPC message parsing with buffering
+- Atomic port file writes for race condition prevention
+- PID validation to detect stale port files
+
+### Testing
 - Comprehensive automated test suite (13 tests)
 - Extension lifecycle tests (7 tests)
 - Command execution tests (6 tests)
@@ -30,11 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session history view
 
 ### Planned for v0.2.0+
-- Observer Mode: Watch AI thinking in real Cursor sessions
 - Graph visualization of thought branches
 - Timeline view of thinking process
 - Customizable themes and layouts
 - Collaboration features
+- Multiple simultaneous observer sessions
 
 ## [0.0.1] - 2025-10-24
 

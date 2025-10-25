@@ -5,17 +5,34 @@
 import * as vscode from 'vscode';
 import { ThoughtNode } from '../types/thoughts';
 
+// Track open webview panel to reuse instead of creating duplicates
+let currentPanel: vscode.WebviewPanel | null = null;
+
 export async function showThoughtDetailsCommand(thought: ThoughtNode): Promise<void> {
-  const panel = vscode.window.createWebviewPanel(
+  // Reuse existing panel if available
+  if (currentPanel) {
+    currentPanel.webview.html = getWebviewContent(thought);
+    currentPanel.title = `Thought ${thought.thoughtNumber}/${thought.totalThoughts}`;
+    currentPanel.reveal(vscode.ViewColumn.Beside);
+    return;
+  }
+
+  // Create new panel if none exists
+  currentPanel = vscode.window.createWebviewPanel(
     'thoughtDetails',
-    `Thought ${thought.thoughtNumber}`,
+    `Thought ${thought.thoughtNumber}/${thought.totalThoughts}`,
     vscode.ViewColumn.Beside,
     {
       enableScripts: false,
     }
   );
 
-  panel.webview.html = getWebviewContent(thought);
+  // Clear reference when panel is closed
+  currentPanel.onDidDispose(() => {
+    currentPanel = null;
+  });
+
+  currentPanel.webview.html = getWebviewContent(thought);
 }
 
 function getWebviewContent(thought: ThoughtNode): string {

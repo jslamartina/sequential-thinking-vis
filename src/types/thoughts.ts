@@ -113,3 +113,17 @@ export interface SequentialThinkingResult {
   /** Length of thought history */
   thoughtHistoryLength: number;
 }
+
+/**
+ * Event emitted by ObserverClient when a thought is observed
+ */
+export interface ThoughtEvent {
+  /** Type of message: request (AI→Server) or response (Server→AI) */
+  type: 'request' | 'response';
+
+  /** The thought data or result */
+  data: unknown;
+
+  /** Timestamp when the event was observed */
+  timestamp: string;
+}

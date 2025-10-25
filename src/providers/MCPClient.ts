@@ -4,7 +4,6 @@
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import * as vscode from 'vscode';
 import {
@@ -22,7 +21,6 @@ import {
 export class MCPClient extends EventEmitter {
   private client: Client | null = null;
   private transport: StdioClientTransport | null = null;
-  private serverProcess: ChildProcess | null = null;
   private connectionState: ConnectionState = ConnectionState.Disconnected;
   private currentSession: ThoughtTree | null = null;
   private outputChannel: vscode.OutputChannel;
@@ -76,7 +74,7 @@ export class MCPClient extends EventEmitter {
         `Starting MCP server: ${serverConfig.command} ${serverConfig.args.join(' ')}`
       );
 
-      // Spawn the MCP server process
+      // Prepare environment variables
       const env: Record<string, string> = {};
       for (const [key, value] of Object.entries(process.env)) {
         if (value !== undefined) {
@@ -87,24 +85,7 @@ export class MCPClient extends EventEmitter {
         Object.assign(env, serverConfig.env);
       }
 
-      this.serverProcess = spawn(serverConfig.command, serverConfig.args, {
-        env,
-        cwd: serverConfig.cwd,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-
-      // Log server stderr for debugging
-      this.serverProcess.stderr?.on('data', (data) => {
-        this.outputChannel.appendLine(`[Server stderr]: ${data.toString()}`);
-      });
-
-      // Handle server process exit
-      this.serverProcess.on('exit', (code, signal) => {
-        this.outputChannel.appendLine(`MCP server exited with code ${code}, signal ${signal}`);
-        this.handleDisconnect();
-      });
-
-      // Create stdio transport
+      // Create stdio transport (this will handle spawning the server process)
       this.transport = new StdioClientTransport({
         command: serverConfig.command,
         args: serverConfig.args,
@@ -157,11 +138,6 @@ export class MCPClient extends EventEmitter {
       if (this.transport) {
         await this.transport.close();
         this.transport = null;
-      }
-
-      if (this.serverProcess) {
-        this.serverProcess.kill();
-        this.serverProcess = null;
       }
 
       this.handleDisconnect();
@@ -317,7 +293,6 @@ export class MCPClient extends EventEmitter {
   private handleDisconnect(): void {
     this.client = null;
     this.transport = null;
-    this.serverProcess = null;
     this.setConnectionState(ConnectionState.Disconnected);
 
     // End current session if any

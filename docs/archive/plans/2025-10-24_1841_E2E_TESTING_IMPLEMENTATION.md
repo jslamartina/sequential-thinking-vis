@@ -15,6 +15,7 @@ Complete rewrite of the extension's E2E test infrastructure to implement **true 
 ## Problem Statement
 
 ### Initial State (Before)
+
 - **34 passing tests, 60 failing tests**
 - E2E tests used `MockMCPServer` - not true E2E testing
 - Tests created their own client instances instead of using the extension's
@@ -22,6 +23,7 @@ Complete rewrite of the extension's E2E test infrastructure to implement **true 
 - 4 tests were skipped due to difficulty testing with mocks
 
 ### Issues Identified
+
 1. **Mock-based E2E tests** - Defeats the purpose of E2E testing
 2. **No extension API exposure** - Tests couldn't access running extension
 3. **Isolated client instances** - Tests created new clients instead of using extension's
@@ -37,6 +39,7 @@ Complete rewrite of the extension's E2E test infrastructure to implement **true 
 **Goal:** Allow tests to access the running extension's components
 
 **Changes to `src/extension.ts`:**
+
 ```typescript
 export interface ExtensionAPI {
   getMCPClient(): MCPClient | null;
@@ -45,7 +48,7 @@ export interface ExtensionAPI {
 
 export async function activate(context: vscode.ExtensionContext): Promise<ExtensionAPI> {
   // ... existing code ...
-  
+
   return {
     getMCPClient: () => mcpClient,
     getTreeProvider: () => treeProvider,
@@ -54,6 +57,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Extens
 ```
 
 **Changes to `src/providers/MCPClient.ts`:**
+
 - Made constructor accept optional `outputChannel` and `testMode` parameters
 - Allows tests to provide output channel without creating new clients
 
@@ -69,22 +73,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<Extens
 
 ```typescript
 // Get extension's MCP client
-export async function getMCPClient(): Promise<MCPClient>
+export async function getMCPClient(): Promise<MCPClient>;
 
 // Get extension's tree provider
-export async function getTreeProvider(): Promise<ThoughtTreeProvider>
+export async function getTreeProvider(): Promise<ThoughtTreeProvider>;
 
 // Execute VS Code commands
-export async function executeCommand(command: string, ...args: any[]): Promise<any>
+export async function executeCommand(command: string, ...args: any[]): Promise<any>;
 
 // Wait for conditions with timeout
 export async function waitFor(
   condition: () => boolean | Promise<boolean>,
   timeout: number = 5000
-): Promise<void>
+): Promise<void>;
 
 // Ensure extension is activated
-export async function ensureExtensionActivated(): Promise<ExtensionAPI>
+export async function ensureExtensionActivated(): Promise<ExtensionAPI>;
 ```
 
 **Result:** Consistent, reliable way to interact with the extension in tests
@@ -96,6 +100,7 @@ export async function ensureExtensionActivated(): Promise<ExtensionAPI>
 **Goal:** Rewrite all E2E tests to use real MCP server and extension API
 
 #### 3.1 Connection Tests (`test/suite/e2e/connection.test.ts`)
+
 - ✅ 8 tests for real MCP server connection lifecycle
 - ✅ Connection state management
 - ✅ Configuration loading
@@ -103,41 +108,45 @@ export async function ensureExtensionActivated(): Promise<ExtensionAPI>
 - ⏭️ 4 error scenarios moved to unit tests (timeout, failure, crash, disconnect)
 
 **Key Pattern:**
+
 ```typescript
 test('Should connect to MCP server successfully', async () => {
   const client = await getMCPClient(); // Get extension's client
-  
+
   await executeCommand('sequential-thinking-vis.connectServer'); // Use real command
   await waitFor(() => client.isConnected(), 10000); // Wait for real connection
-  
+
   assert.ok(client.isConnected()); // Verify real state
 });
 ```
 
 #### 3.2 Visualization Tests (`test/suite/e2e/visualization.test.ts`)
+
 - ✅ 12 tests for tree view rendering with real data
 - ✅ Session header, thought display, icons, tooltips
 - ✅ Tree structure and collapsible states
 - ✅ Command integration
 
 **Key Pattern:**
+
 ```typescript
 test('Should render session header with thought count', async () => {
   const client = await getMCPClient();
   const provider = await getTreeProvider();
-  
+
   await executeCommand('sequential-thinking-vis.connectServer');
   await waitFor(() => client.isConnected(), 10000);
-  
+
   client.startSession('Test');
   await client.callSequentialThinking({...}); // Real MCP call
-  
+
   const children = await provider.getChildren(); // Real tree data
   assert.ok(children.length > 0);
 });
 ```
 
 #### 3.3 User Interaction Tests (`test/suite/e2e/user-interaction.test.ts`)
+
 - ✅ 14 tests for commands and workflows
 - ✅ Connect/disconnect commands
 - ✅ Session management
@@ -145,6 +154,7 @@ test('Should render session header with thought count', async () => {
 - ✅ Full workflows (connect → think → disconnect)
 
 #### 3.4 Thought Flow Tests (`test/suite/e2e/thought-flow.test.ts`)
+
 - ✅ 15 tests for thought processing patterns
 - ✅ Linear, branched, and revised thought flows
 - ✅ Session lifecycle events
@@ -152,6 +162,7 @@ test('Should render session header with thought count', async () => {
 - ✅ Error handling
 
 #### 3.5 Compatibility Tests (`test/suite/e2e/compatibility.test.ts`)
+
 - ✅ 23 tests for VS Code/Cursor compatibility
 - ✅ Editor detection
 - ✅ VS Code API compatibility
@@ -239,6 +250,7 @@ test('Should render session header with thought count', async () => {
 **Updated `docs/E2E-TESTING.md`:**
 
 Complete rewrite documenting:
+
 - True E2E testing architecture (no mocks)
 - Extension API exposure pattern
 - Test helper utilities
@@ -248,6 +260,7 @@ Complete rewrite documenting:
 - CI/CD integration examples
 
 **Key sections:**
+
 1. Test Architecture - How E2E tests work with real server
 2. Test Coverage - What each suite tests
 3. How to Run Tests - Commands and options
@@ -261,12 +274,14 @@ Complete rewrite documenting:
 ### Test Metrics
 
 **Before:**
+
 - 34 passing
-- 60 failing  
+- 60 failing
 - 4 pending (skipped)
 - 36% pass rate
 
 **After:**
+
 - **107 passing** (+73)
 - **0 failing** (-60)
 - **0 pending** (-4)
@@ -274,25 +289,27 @@ Complete rewrite documenting:
 
 ### Test Breakdown
 
-| Suite | Tests | Type | Description |
-|-------|-------|------|-------------|
-| Extension Tests | 7 | Integration | Basic extension activation and registration |
-| Command Tests | 5 | Integration | Command registration and configuration |
-| E2E Connection | 8 | E2E | Real MCP server connection lifecycle |
-| E2E Visualization | 12 | E2E | Tree view rendering with real data |
-| E2E User Interaction | 14 | E2E | Commands and workflows |
-| E2E Thought Flow | 15 | E2E | Thought processing patterns |
-| E2E Compatibility | 23 | E2E | VS Code/Cursor API compatibility |
-| Unit MCPClient | 26 | Unit | Error scenarios and edge cases |
-| **TOTAL** | **107** | | **All passing** |
+| Suite                | Tests   | Type        | Description                                 |
+| -------------------- | ------- | ----------- | ------------------------------------------- |
+| Extension Tests      | 7       | Integration | Basic extension activation and registration |
+| Command Tests        | 5       | Integration | Command registration and configuration      |
+| E2E Connection       | 8       | E2E         | Real MCP server connection lifecycle        |
+| E2E Visualization    | 12      | E2E         | Tree view rendering with real data          |
+| E2E User Interaction | 14      | E2E         | Commands and workflows                      |
+| E2E Thought Flow     | 15      | E2E         | Thought processing patterns                 |
+| E2E Compatibility    | 23      | E2E         | VS Code/Cursor API compatibility            |
+| Unit MCPClient       | 26      | Unit        | Error scenarios and edge cases              |
+| **TOTAL**            | **107** |             | **All passing**                             |
 
 ### Files Changed
 
 **Source Code:**
+
 - `src/extension.ts` - Added ExtensionAPI interface and return value
 - `src/providers/MCPClient.ts` - Optional constructor parameters
 
 **Test Infrastructure:**
+
 - `test/helpers/e2e-setup.ts` - NEW: Test helper utilities
 - `test/suite/unit/MCPClient.test.ts` - NEW: 26 unit tests
 - `test/suite/e2e/connection.test.ts` - Rewritten for real server
@@ -303,9 +320,11 @@ Complete rewrite documenting:
 - `test/suite/commands.test.ts` - Fixed config assertions
 
 **Documentation:**
+
 - `docs/E2E-TESTING.md` - Complete rewrite
 
 **Removed:**
+
 - `test/fixtures/thought-data.ts` - No longer needed (using real server)
 - `test/mocks/MockMCPServer.ts` - No longer needed (using real server)
 
@@ -357,31 +376,35 @@ Complete rewrite documenting:
 ## Testing Best Practices Established
 
 ### E2E Tests Should:
+
 ✅ Use the real extension instance via API  
 ✅ Connect to real MCP server  
 ✅ Execute actual VS Code commands  
 ✅ Test complete user workflows  
-✅ Run in real VS Code environment  
+✅ Run in real VS Code environment
 
 ### E2E Tests Should NOT:
+
 ❌ Mock the MCP server  
 ❌ Create their own client instances  
 ❌ Skip error scenarios (move to unit tests)  
 ❌ Test implementation details  
-❌ Make assumptions about config values  
+❌ Make assumptions about config values
 
 ### Unit Tests Should:
+
 ✅ Test error scenarios  
 ✅ Test edge cases  
 ✅ Be fast and reliable  
 ✅ Not require external dependencies  
-✅ Focus on logic, not integration  
+✅ Focus on logic, not integration
 
 ---
 
 ## Commands Reference
 
 ### Running Tests
+
 ```bash
 # All tests
 npm test
@@ -399,6 +422,7 @@ npm test
 ```
 
 ### Test Development
+
 ```bash
 # Compile TypeScript
 npm run compile
@@ -450,18 +474,21 @@ npm run format
 ## Commits
 
 ### Commit 1: `0db78d9` - Main E2E Rewrite
+
 - Rewrote all E2E test infrastructure
 - Created test helpers for real extension access
 - Fixed 60 failing tests
 - Added 47 new passing tests
 
 ### Commit 2: `a745564` - Documentation Update
+
 - Completely rewrote E2E-TESTING.md
 - Removed outdated mock-based documentation
 - Added real-server testing examples
 - Included troubleshooting guide
 
 ### Commit 3: `92d0268` - Unit Test Creation
+
 - Created test/suite/unit/MCPClient.test.ts
 - 26 new unit tests for error scenarios
 - Removed 4 skipped tests from E2E
@@ -471,16 +498,16 @@ npm run format
 
 ## Success Metrics
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Total Tests | 94 | 107 | +13 (+14%) |
-| Passing | 34 | 107 | +73 (+215%) |
-| Failing | 60 | 0 | -60 (-100%) |
-| Pending | 4 | 0 | -4 (-100%) |
-| Pass Rate | 36% | 100% | +64% |
-| Test Duration | ~60s | ~60s | Same |
-| Real E2E Coverage | 0% | 67% | +67% |
-| Unit Test Coverage | 36% | 33% | Rebalanced |
+| Metric             | Before | After | Change      |
+| ------------------ | ------ | ----- | ----------- |
+| Total Tests        | 94     | 107   | +13 (+14%)  |
+| Passing            | 34     | 107   | +73 (+215%) |
+| Failing            | 60     | 0     | -60 (-100%) |
+| Pending            | 4      | 0     | -4 (-100%)  |
+| Pass Rate          | 36%    | 100%  | +64%        |
+| Test Duration      | ~60s   | ~60s  | Same        |
+| Real E2E Coverage  | 0%     | 67%   | +67%        |
+| Unit Test Coverage | 36%    | 33%   | Rebalanced  |
 
 ---
 
@@ -500,4 +527,3 @@ The extension now has reliable, maintainable tests that give confidence in produ
 ---
 
 **Archived:** October 24, 2025 23:00 CDT
-
